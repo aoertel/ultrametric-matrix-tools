@@ -1,7 +1,7 @@
 extern crate nalgebra as na;
 
 use graph6::*;
-use na::DMatrix;
+use na::{DMatrix, DVector};
 use petgraph::algo::astar;
 use petgraph::prelude::*;
 use petgraph::visit::GetAdjacencyMatrix;
@@ -13,6 +13,9 @@ use std::sync::{Arc, Mutex};
 #[derive(Default, Debug, Clone)]
 struct RootedTreeVertex {
     partition: Vec<usize>,
+    level: f64,
+    level_diff: f64,
+    sum: Option<f64>,
     parent: Option<usize>,
     left_child: Option<usize>,
     right_child: Option<usize>,
@@ -47,6 +50,7 @@ impl RootedTree {
 }
 
 fn main() {
+    /*
     let input = File::open("graph4c.g6");
     let input_file = match input {
         Ok(file) => file,
@@ -54,13 +58,20 @@ fn main() {
     };
     let mut lines = io::BufReader::new(input_file).lines();
     let line = lines.next();
-    if let Some(Ok(g6_string)) = line {
-        let graph = from_graph6_string(&g6_string);
-        let matrix = get_vertex_path_matrix(&graph);
-        dbg!(&matrix);
-        let tree = get_partition_tree(&matrix);
-        dbg!(tree);
-    }
+    */
+
+    let graph = generate_example_graph();
+    let mut matrix = get_vertex_path_matrix(&graph);
+    matrix[(1, 1)] = 2.0;
+    matrix[(4, 4)] = 4.0;
+    println!("{}", &matrix);
+    let vector = DVector::<f64>::from_iterator(8, vec![1., 2., 3., 4., 5., 6., 7., 8.]);
+    println!("{}", &vector);
+
+    let mut tree = get_partition_tree(&matrix);
+    dbg!(&tree);
+    let product = multiply_with_tree(&mut tree, &vector);
+    println!("{}", &product);
 }
 
 fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTree {
@@ -73,11 +84,14 @@ fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTree {
 }
 
 fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, parent: usize) {
+    let first_i = tree.vertices[parent].partition[0];
     if tree.vertices[parent].partition.len() == 1 {
         tree.leafs.push(parent);
+        tree.vertices[parent].level = matrix[(first_i, first_i)];
+        tree.vertices[parent].level_diff =
+            -tree.vertices[tree.vertices[parent].parent.unwrap()].level;
         return;
     }
-    let first_i = tree.vertices[parent].partition[0];
     let mut left_partition: Vec<usize> = vec![first_i];
     let mut right_partition: Vec<usize> = Vec::new();
     let mut min = f64::MAX;
@@ -95,6 +109,13 @@ fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, paren
             }
         }
     }
+    tree.vertices[parent].level = min;
+    if parent == 0 {
+        tree.vertices[parent].level_diff = min;
+    } else {
+        tree.vertices[parent].level_diff =
+            min - tree.vertices[tree.vertices[parent].parent.unwrap()].level;
+    }
 
     let left_child = tree.add_vertex(left_partition);
     let right_child = tree.add_vertex(right_partition);
@@ -105,6 +126,25 @@ fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, paren
 
     partition_tree_vertex(matrix, &mut tree, left_child);
     partition_tree_vertex(matrix, &mut tree, right_child);
+}
+
+fn multiply_with_tree(mut tree: &mut RootedTree, vector: &DVector<f64>) -> DVector<f64> {
+    calculate_sums(&mut tree, 0, vector);
+
+    return vector.clone();
+}
+
+fn calculate_sums(mut tree: &mut RootedTree, current: usize, vector: &DVector<f64>) -> f64 {
+    if tree.vertices[current].partition.len() == 1 {
+        return vector[tree.vertices[current].partition[0]];
+    }
+    let left_child = tree.vertices[current].left_child.unwrap();
+    let right_child = tree.vertices[current].right_child.unwrap();
+    let left_sum = calculate_sums(&mut tree, left_child, vector);
+    let right_sum = calculate_sums(&mut tree, right_child, vector);
+    let sum = left_sum + right_sum;
+    tree.vertices[current].sum = Some(sum);
+    return sum;
 }
 
 fn get_vertex_path_matrix(g: &StableUnGraph<(), ()>) -> DMatrix<f64> {
@@ -187,6 +227,21 @@ fn generate_empty_graph(vertices: usize) -> StableUnGraph<(), ()> {
     for _ in 0..vertices {
         g.add_node(());
     }
+    return g;
+}
+
+fn generate_example_graph() -> StableUnGraph<(), ()> {
+    let mut g = generate_empty_graph(8);
+    g.add_edge(0.into(), 4.into(), ());
+    g.add_edge(0.into(), 7.into(), ());
+    g.add_edge(4.into(), 7.into(), ());
+    g.add_edge(5.into(), 7.into(), ());
+    g.add_edge(2.into(), 3.into(), ());
+    g.add_edge(1.into(), 5.into(), ());
+    g.add_edge(1.into(), 3.into(), ());
+    g.add_edge(1.into(), 6.into(), ());
+    g.add_edge(3.into(), 5.into(), ());
+    g.add_edge(3.into(), 6.into(), ());
     return g;
 }
 
