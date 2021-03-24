@@ -37,8 +37,10 @@ struct RootedTree {
 }
 
 impl RootedTree {
-    fn new() -> RootedTree {
+    fn new(num_leafs: usize) -> RootedTree {
+        let vec: Vec<usize> = vec![0; num_leafs];
         RootedTree {
+            leafs: vec,
             ..Default::default()
         }
     }
@@ -62,21 +64,27 @@ fn main() {
 
     let graph = generate_example_graph();
     let mut matrix = get_vertex_path_matrix(&graph);
-    matrix[(1, 1)] = 2.0;
-    matrix[(4, 4)] = 4.0;
+    matrix[(2, 2)] = 4.0;
+    matrix[(4, 4)] = 2.0;
     println!("{}", &matrix);
     let vector = DVector::<f64>::from_iterator(8, vec![1., 2., 3., 4., 5., 6., 7., 8.]);
     println!("{}", &vector);
 
     let mut tree = get_partition_tree(&matrix);
-    dbg!(&tree);
-    let product = multiply_with_tree(&mut tree, &vector);
-    println!("{}", &product);
+    let fast_product = multiply_with_tree(&mut tree, &vector);
+    println!("Fast product: {}", &fast_product);
+    let normal_product = matrix * vector;
+    println!("Normal product: {}", &normal_product);
+    if normal_product == fast_product {
+        println!("Works!");
+    } else {
+        println!("Does not work");
+    }
 }
 
 fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTree {
     let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
-    let mut tree = RootedTree::new();
+    let mut tree = RootedTree::new(matrix.nrows());
     tree.add_vertex(vertex_ids);
     partition_tree_vertex(&matrix, &mut tree, 0);
 
@@ -86,10 +94,9 @@ fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTree {
 fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, parent: usize) {
     let first_i = tree.vertices[parent].partition[0];
     if tree.vertices[parent].partition.len() == 1 {
-        tree.leafs.push(parent);
-        tree.vertices[parent].level = matrix[(first_i, first_i)];
-        tree.vertices[parent].level_diff =
-            -tree.vertices[tree.vertices[parent].parent.unwrap()].level;
+        tree.leafs[first_i] = parent;
+        tree.vertices[parent].level_diff = matrix[(first_i, first_i)];
+        tree.vertices[parent].level = tree.vertices[tree.vertices[parent].parent.unwrap()].level;
         return;
     }
     let mut left_partition: Vec<usize> = vec![first_i];
@@ -130,21 +137,38 @@ fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, paren
 
 fn multiply_with_tree(mut tree: &mut RootedTree, vector: &DVector<f64>) -> DVector<f64> {
     calculate_sums(&mut tree, 0, vector);
-
-    return vector.clone();
+    dbg!(&tree);
+    let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
+    for i in 0..vector.nrows() {
+        let leaf = tree.leafs[i];
+        product[i] = calculate_single_product(&mut tree, leaf);
+    }
+    return product;
 }
 
 fn calculate_sums(mut tree: &mut RootedTree, current: usize, vector: &DVector<f64>) -> f64 {
     if tree.vertices[current].partition.len() == 1 {
-        return vector[tree.vertices[current].partition[0]];
+        let sum = vector[tree.vertices[current].partition[0]];
+        tree.vertices[current].sum =
+            Some((tree.vertices[current].level_diff - tree.vertices[current].level) * sum);
+        return sum;
     }
     let left_child = tree.vertices[current].left_child.unwrap();
     let right_child = tree.vertices[current].right_child.unwrap();
     let left_sum = calculate_sums(&mut tree, left_child, vector);
     let right_sum = calculate_sums(&mut tree, right_child, vector);
     let sum = left_sum + right_sum;
-    tree.vertices[current].sum = Some(sum);
+    tree.vertices[current].sum = Some(sum * tree.vertices[current].level_diff);
     return sum;
+}
+
+fn calculate_single_product(mut tree: &mut RootedTree, current: usize) -> f64 {
+    if current == 0 {
+        return tree.vertices[0].sum.unwrap();
+    } else {
+        let parent = tree.vertices[current].parent.unwrap();
+        return tree.vertices[current].sum.unwrap() + calculate_single_product(&mut tree, parent);
+    }
 }
 
 fn get_vertex_path_matrix(g: &StableUnGraph<(), ()>) -> DMatrix<f64> {
