@@ -95,7 +95,7 @@ fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTree {
     return tree;
 }
 
-fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, parent: usize) {
+fn partition_tree_vertex(matrix: &DMatrix<f64>, tree: &mut RootedTree, parent: usize) {
     let first_i = tree.vertices[parent].partition[0];
     if tree.vertices[parent].partition.len() == 1 {
         tree.leafs[first_i] = parent;
@@ -135,21 +135,24 @@ fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, paren
     tree.vertices[left_child].parent = Some(parent);
     tree.vertices[right_child].parent = Some(parent);
 
-    partition_tree_vertex(matrix, &mut tree, left_child);
-    partition_tree_vertex(matrix, &mut tree, right_child);
+    partition_tree_vertex(matrix, tree, left_child);
+    partition_tree_vertex(matrix, tree, right_child);
 }
 
-fn multiply_with_tree(mut tree: &mut RootedTree, vector: &DVector<f64>) -> DVector<f64> {
-    calculate_sums(&mut tree, 0, vector);
+fn multiply_with_tree(tree: &mut RootedTree, vector: &DVector<f64>) -> DVector<f64> {
+    calculate_sums(tree, 0, vector);
     let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
+    calculate_full_product(tree, 0, &mut product, 0.0);
+    /*
     for i in 0..vector.nrows() {
         let leaf = tree.leafs[i];
         product[i] = calculate_single_product(&mut tree, leaf);
     }
+    */
     return product;
 }
 
-fn calculate_sums(mut tree: &mut RootedTree, current: usize, vector: &DVector<f64>) -> f64 {
+fn calculate_sums(tree: &mut RootedTree, current: usize, vector: &DVector<f64>) -> f64 {
     if tree.vertices[current].partition.len() == 1 {
         let sum = vector[tree.vertices[current].partition[0]];
         tree.vertices[current].sum =
@@ -158,11 +161,28 @@ fn calculate_sums(mut tree: &mut RootedTree, current: usize, vector: &DVector<f6
     }
     let left_child = tree.vertices[current].left_child.unwrap();
     let right_child = tree.vertices[current].right_child.unwrap();
-    let left_sum = calculate_sums(&mut tree, left_child, vector);
-    let right_sum = calculate_sums(&mut tree, right_child, vector);
+    let left_sum = calculate_sums(tree, left_child, vector);
+    let right_sum = calculate_sums(tree, right_child, vector);
     let sum = left_sum + right_sum;
     tree.vertices[current].sum = Some(sum * tree.vertices[current].level_diff);
     return sum;
+}
+
+fn calculate_full_product(
+    tree: &RootedTree,
+    current: usize,
+    product: &mut DVector<f64>,
+    prev_sum: f64,
+) {
+    let sum = prev_sum + tree.vertices[current].sum.unwrap();
+    if tree.vertices[current].partition.len() == 1 {
+        product[tree.vertices[current].partition[0]] = sum;
+        return;
+    }
+    let left_child = tree.vertices[current].left_child.unwrap();
+    let right_child = tree.vertices[current].right_child.unwrap();
+    calculate_full_product(tree, left_child, product, sum);
+    calculate_full_product(tree, right_child, product, sum);
 }
 
 fn calculate_single_product(mut tree: &mut RootedTree, current: usize) -> f64 {
