@@ -5,6 +5,7 @@ use na::{DMatrix, DVector};
 use petgraph::algo::astar;
 use petgraph::prelude::*;
 use petgraph::visit::GetAdjacencyMatrix;
+use rand::Rng;
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -66,8 +67,11 @@ fn main() {
     let mut matrix = get_vertex_path_matrix(&graph);
     matrix[(2, 2)] = 4.0;
     matrix[(4, 4)] = 2.0;
+    //let matrix = generate_random_matrix(10);
     println!("{}", &matrix);
+
     let vector = DVector::<f64>::from_iterator(8, vec![1., 2., 3., 4., 5., 6., 7., 8.]);
+    //let vector = generate_random_vector(10);
     println!("{}", &vector);
 
     let mut tree = get_partition_tree(&matrix);
@@ -137,7 +141,6 @@ fn partition_tree_vertex(matrix: &DMatrix<f64>, mut tree: &mut RootedTree, paren
 
 fn multiply_with_tree(mut tree: &mut RootedTree, vector: &DVector<f64>) -> DVector<f64> {
     calculate_sums(&mut tree, 0, vector);
-    dbg!(&tree);
     let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
     for i in 0..vector.nrows() {
         let leaf = tree.leafs[i];
@@ -267,6 +270,40 @@ fn generate_example_graph() -> StableUnGraph<(), ()> {
     g.add_edge(3.into(), 5.into(), ());
     g.add_edge(3.into(), 6.into(), ());
     return g;
+}
+
+//TODO: this function does not work, work out a way to generate a random ultrametric matrix
+fn generate_random_matrix(size: usize) -> DMatrix<f64> {
+    let mut rng = rand::thread_rng();
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    for i in 1..size {
+        matrix[(0, i)] = rng.gen_range(1..size) as f64;
+    }
+    for i in 1..size {
+        for j in (i + 1)..size {
+            let left_side = matrix[(0, j)];
+            let right_side = matrix[(0, i)];
+            if right_side <= left_side {
+                let new_element = rng.gen_range(1..size) as f64;
+                matrix[(i, j)] = new_element;
+                matrix[(j, i)] = new_element;
+            } else {
+                let new_element = rng.gen_range(1..(left_side as usize + 1)) as f64;
+                matrix[(i, j)] = left_side;
+                matrix[(j, i)] = left_side;
+            }
+        }
+    }
+    return matrix;
+}
+
+fn generate_random_vector(size: usize) -> DVector<f64> {
+    let mut rng = rand::thread_rng();
+    let mut vector = DVector::<f64>::zeros(size);
+    for i in 0..size {
+        vector[i] = rng.gen_range(1..size) as f64;
+    }
+    return vector;
 }
 
 fn from_graph6_string(s: &String) -> StableUnGraph<(), ()> {
