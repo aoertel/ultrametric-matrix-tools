@@ -16,10 +16,9 @@ struct RootedTreeVertex {
     partition: Vec<usize>,
     level: f64,
     level_diff: f64,
-    sum: Option<f64>,
-    parent: Option<usize>,
-    left_child: Option<usize>,
-    right_child: Option<usize>,
+    sum: f64,
+    left_child: Option<Box<RootedTreeVertex>>,
+    right_child: Option<Box<RootedTreeVertex>>,
 }
 
 impl RootedTreeVertex {
@@ -28,27 +27,6 @@ impl RootedTreeVertex {
             partition: partition,
             ..Default::default()
         }
-    }
-}
-
-#[derive(Default, Debug)]
-struct RootedTree {
-    vertices: Vec<RootedTreeVertex>,
-    leafs: Vec<usize>,
-}
-
-impl RootedTree {
-    fn new(num_leafs: usize) -> RootedTree {
-        let vec: Vec<usize> = vec![0; num_leafs];
-        RootedTree {
-            leafs: vec,
-            ..Default::default()
-        }
-    }
-
-    fn add_vertex(&mut self, partition: Vec<usize>) -> usize {
-        self.vertices.push(RootedTreeVertex::new(partition));
-        return self.vertices.len() - 1;
     }
 }
 
@@ -74,8 +52,8 @@ fn main() {
     //let vector = generate_random_vector(10);
     println!("{}", &vector);
 
-    let mut tree = get_partition_tree(&matrix);
-    let fast_product = multiply_with_tree(&mut tree, &vector);
+    let mut root = get_partition_tree(&matrix);
+    let fast_product = multiply_with_tree(&mut root, &vector);
     println!("Fast product: {}", &fast_product);
     let normal_product = matrix * vector;
     println!("Normal product: {}", &normal_product);
@@ -86,27 +64,25 @@ fn main() {
     }
 }
 
-fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTree {
+fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTreeVertex {
     let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
-    let mut tree = RootedTree::new(matrix.nrows());
-    tree.add_vertex(vertex_ids);
-    partition_tree_vertex(&matrix, &mut tree, 0);
+    let mut root = RootedTreeVertex::new(vertex_ids);
+    partition_tree_vertex(&matrix, &mut root, 0.0);
 
-    return tree;
+    return root;
 }
 
-fn partition_tree_vertex(matrix: &DMatrix<f64>, tree: &mut RootedTree, parent: usize) {
-    let first_i = tree.vertices[parent].partition[0];
-    if tree.vertices[parent].partition.len() == 1 {
-        tree.leafs[first_i] = parent;
-        tree.vertices[parent].level_diff = matrix[(first_i, first_i)];
-        tree.vertices[parent].level = tree.vertices[tree.vertices[parent].parent.unwrap()].level;
+fn partition_tree_vertex(matrix: &DMatrix<f64>, current: &mut RootedTreeVertex, parent_level: f64) {
+    let first_i = current.partition[0];
+    if current.partition.len() == 1 {
+        current.level_diff = matrix[(first_i, first_i)];
+        current.level = parent_level;
         return;
     }
     let mut left_partition: Vec<usize> = vec![first_i];
     let mut right_partition: Vec<usize> = Vec::new();
     let mut min = f64::MAX;
-    for &i in &tree.vertices[parent].partition[1..] {
+    for &i in &current.partition[1..] {
         if min > matrix[(first_i, i)] {
             min = matrix[(first_i, i)];
             left_partition.extend(right_partition.iter());
@@ -120,78 +96,47 @@ fn partition_tree_vertex(matrix: &DMatrix<f64>, tree: &mut RootedTree, parent: u
             }
         }
     }
-    tree.vertices[parent].level = min;
-    if parent == 0 {
-        tree.vertices[parent].level_diff = min;
-    } else {
-        tree.vertices[parent].level_diff =
-            min - tree.vertices[tree.vertices[parent].parent.unwrap()].level;
-    }
+    current.level = min;
+    current.level_diff = min - parent_level;
 
-    let left_child = tree.add_vertex(left_partition);
-    let right_child = tree.add_vertex(right_partition);
-    tree.vertices[parent].left_child = Some(left_child);
-    tree.vertices[parent].right_child = Some(right_child);
-    tree.vertices[left_child].parent = Some(parent);
-    tree.vertices[right_child].parent = Some(parent);
+    let left_child = Box::new(RootedTreeVertex::new(left_partition));
+    let right_child = Box::new(RootedTreeVertex::new(right_partition));
+    current.left_child = Some(left_child);
+    current.right_child = Some(right_child);
 
-    partition_tree_vertex(matrix, tree, left_child);
-    partition_tree_vertex(matrix, tree, right_child);
+    partition_tree_vertex(matrix, current.left_child.as_mut().unwrap(), current.level);
+    partition_tree_vertex(matrix, current.right_child.as_mut().unwrap(), current.level);
 }
 
-fn multiply_with_tree(tree: &mut RootedTree, vector: &DVector<f64>) -> DVector<f64> {
-    calculate_sums(tree, 0, vector);
+fn multiply_with_tree(root: &mut RootedTreeVertex, vector: &DVector<f64>) -> DVector<f64> {
+    calculate_sums(root, vector);
     let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
-    calculate_full_product(tree, 0, &mut product, 0.0);
-    /*
-    for i in 0..vector.nrows() {
-        let leaf = tree.leafs[i];
-        product[i] = calculate_single_product(&mut tree, leaf);
-    }
-    */
+    calculate_full_product(root, &mut product, 0.0);
     return product;
 }
 
-fn calculate_sums(tree: &mut RootedTree, current: usize, vector: &DVector<f64>) -> f64 {
-    if tree.vertices[current].partition.len() == 1 {
-        let sum = vector[tree.vertices[current].partition[0]];
-        tree.vertices[current].sum =
-            Some((tree.vertices[current].level_diff - tree.vertices[current].level) * sum);
+fn calculate_sums(current: &mut RootedTreeVertex, vector: &DVector<f64>) -> f64 {
+    if current.partition.len() == 1 {
+        let sum = vector[current.partition[0]];
+        current.sum = (current.level_diff - current.level) * sum;
         return sum;
     }
-    let left_child = tree.vertices[current].left_child.unwrap();
-    let right_child = tree.vertices[current].right_child.unwrap();
-    let left_sum = calculate_sums(tree, left_child, vector);
-    let right_sum = calculate_sums(tree, right_child, vector);
+
+    let left_sum = calculate_sums(current.left_child.as_mut().unwrap(), vector);
+    let right_sum = calculate_sums(current.right_child.as_mut().unwrap(), vector);
     let sum = left_sum + right_sum;
-    tree.vertices[current].sum = Some(sum * tree.vertices[current].level_diff);
+    current.sum = sum * current.level_diff;
     return sum;
 }
 
-fn calculate_full_product(
-    tree: &RootedTree,
-    current: usize,
-    product: &mut DVector<f64>,
-    prev_sum: f64,
-) {
-    let sum = prev_sum + tree.vertices[current].sum.unwrap();
-    if tree.vertices[current].partition.len() == 1 {
-        product[tree.vertices[current].partition[0]] = sum;
+fn calculate_full_product(current: &RootedTreeVertex, product: &mut DVector<f64>, prev_sum: f64) {
+    let sum = prev_sum + current.sum;
+    if current.partition.len() == 1 {
+        product[current.partition[0]] = sum;
         return;
     }
-    let left_child = tree.vertices[current].left_child.unwrap();
-    let right_child = tree.vertices[current].right_child.unwrap();
-    calculate_full_product(tree, left_child, product, sum);
-    calculate_full_product(tree, right_child, product, sum);
-}
-
-fn calculate_single_product(mut tree: &mut RootedTree, current: usize) -> f64 {
-    if current == 0 {
-        return tree.vertices[0].sum.unwrap();
-    } else {
-        let parent = tree.vertices[current].parent.unwrap();
-        return tree.vertices[current].sum.unwrap() + calculate_single_product(&mut tree, parent);
-    }
+    calculate_full_product(current.left_child.as_ref().unwrap(), product, sum);
+    calculate_full_product(current.right_child.as_ref().unwrap(), product, sum);
 }
 
 fn get_vertex_path_matrix(g: &StableUnGraph<(), ()>) -> DMatrix<f64> {
