@@ -41,15 +41,10 @@ fn main() {
     let line = lines.next();
     */
 
-    let graph = generate_example_graph();
-    let mut matrix = get_vertex_path_matrix(&graph);
-    matrix[(2, 2)] = 4.0;
-    matrix[(4, 4)] = 2.0;
-    //let matrix = generate_random_matrix(10);
+    let matrix = generate_random_connectivity_matrix(100, 0.5);
     println!("{}", &matrix);
 
-    let vector = DVector::<f64>::from_iterator(8, vec![1., 2., 3., 4., 5., 6., 7., 8.]);
-    //let vector = generate_random_vector(10);
+    let vector = generate_random_vector(100);
     println!("{}", &vector);
 
     let mut root = get_partition_tree(&matrix);
@@ -222,6 +217,27 @@ fn generate_empty_graph(vertices: usize) -> StableUnGraph<(), ()> {
     return g;
 }
 
+fn generate_random_graph(vertices: usize, edge_prob: f64) -> StableUnGraph<(), ()> {
+    let mut g = generate_empty_graph(vertices);
+    for from in 0..(vertices - 1) as u32 {
+        for to in (from + 1)..vertices as u32 {
+            let random_value: f64 = rand::thread_rng().gen();
+            if random_value <= edge_prob {
+                g.add_edge(from.into(), to.into(), ());
+            }
+        }
+    }
+    return g;
+}
+
+fn generate_example_matrix() -> DMatrix<f64> {
+    let graph = generate_example_graph();
+    let mut matrix = get_vertex_path_matrix(&graph);
+    matrix[(2, 2)] = 4.0;
+    matrix[(4, 4)] = 2.0;
+    return matrix;
+}
+
 fn generate_example_graph() -> StableUnGraph<(), ()> {
     let mut g = generate_empty_graph(8);
     g.add_edge(0.into(), 4.into(), ());
@@ -237,27 +253,12 @@ fn generate_example_graph() -> StableUnGraph<(), ()> {
     return g;
 }
 
-//TODO: this function does not work, work out a way to generate a random ultrametric matrix
-fn generate_random_matrix(size: usize) -> DMatrix<f64> {
+fn generate_random_connectivity_matrix(size: usize, edge_prob: f64) -> DMatrix<f64> {
     let mut rng = rand::thread_rng();
-    let mut matrix = DMatrix::<f64>::zeros(size, size);
-    for i in 1..size {
-        matrix[(0, i)] = rng.gen_range(1..size) as f64;
-    }
-    for i in 1..size {
-        for j in (i + 1)..size {
-            let left_side = matrix[(0, j)];
-            let right_side = matrix[(0, i)];
-            if right_side <= left_side {
-                let new_element = rng.gen_range(1..size) as f64;
-                matrix[(i, j)] = new_element;
-                matrix[(j, i)] = new_element;
-            } else {
-                let new_element = rng.gen_range(1..(left_side as usize + 1)) as f64;
-                matrix[(i, j)] = left_side;
-                matrix[(j, i)] = left_side;
-            }
-        }
+    let g = generate_random_graph(size, edge_prob);
+    let mut matrix = get_vertex_path_matrix(&g);
+    for i in 0..size {
+        matrix[(i, i)] = rng.gen_range(0..size) as f64;
     }
     return matrix;
 }
