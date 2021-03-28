@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 #[derive(Default, Debug, Clone)]
 struct RootedTreeVertex {
@@ -55,7 +55,7 @@ fn main() {
     let duration_fast_full = start_fast.elapsed().unwrap();
 
     let start_normal = SystemTime::now();
-    let normal_product = matrix * vector;
+    let normal_product = calculate_normal_product(&matrix, &vector);
     let duration_normal = start_normal.elapsed().unwrap();
 
     println!("Fast product: {}", &fast_product);
@@ -151,6 +151,17 @@ fn calculate_full_product(current: &RootedTreeVertex, product: &mut DVector<f64>
     }
     calculate_full_product(current.left_child.as_ref().unwrap(), product, sum);
     calculate_full_product(current.right_child.as_ref().unwrap(), product, sum);
+}
+
+fn calculate_normal_product(matrix: &DMatrix<f64>, vector: &DVector<f64>) -> DVector<f64> {
+    let size = vector.nrows();
+    let mut product: DVector<f64> = DVector::<f64>::zeros(size);
+    for i in 0..size {
+        for j in 0..size {
+            product[i] += matrix[(i, j)] * vector[j];
+        }
+    }
+    return product;
 }
 
 fn get_vertex_path_matrix(g: &StableUnGraph<(), ()>) -> DMatrix<f64> {
