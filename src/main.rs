@@ -10,6 +10,7 @@ use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, SystemTime};
 
 #[derive(Default, Debug, Clone)]
 struct RootedTreeVertex {
@@ -41,22 +42,40 @@ fn main() {
     let line = lines.next();
     */
 
-    let matrix = generate_random_connectivity_matrix(100, 0.5);
+    let size = 200;
+    let matrix = generate_random_connectivity_matrix(size, 0.1);
     println!("{}", &matrix);
-
-    let vector = generate_random_vector(100);
+    let vector = generate_random_vector(size);
     println!("{}", &vector);
 
+    let start_fast = SystemTime::now();
     let mut root = get_partition_tree(&matrix);
+    let duration_tree_gen = start_fast.elapsed().unwrap();
     let fast_product = multiply_with_tree(&mut root, &vector);
-    println!("Fast product: {}", &fast_product);
+    let duration_fast_full = start_fast.elapsed().unwrap();
+
+    let start_normal = SystemTime::now();
     let normal_product = matrix * vector;
+    let duration_normal = start_normal.elapsed().unwrap();
+
+    println!("Fast product: {}", &fast_product);
     println!("Normal product: {}", &normal_product);
     if normal_product == fast_product {
-        println!("Works!");
+        println!("Same Results!");
     } else {
-        println!("Does not work");
+        println!("Different Results!");
     }
+
+    println!("Time for tree generation: {:?}", duration_tree_gen);
+    println!(
+        "Time for multiplication with known tree: {:?}",
+        duration_fast_full - duration_tree_gen
+    );
+    println!(
+        "Time for full fast multiplication: {:?}",
+        duration_fast_full
+    );
+    println!("Time for normal multiplication: {:?}", duration_normal);
 }
 
 fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTreeVertex {
