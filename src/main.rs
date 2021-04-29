@@ -32,8 +32,8 @@ impl RootedTreeVertex {
 }
 
 fn main() {
-    let size = 30;
-    let matrix = generate_random_connectivity_matrix(size, 0.5);
+    let size = 1000;
+    let matrix = generate_random_connectivity_matrix(size, 0.01);
     println!("{}", &matrix);
     let vector = generate_random_vector(size);
     println!("{}", &vector);
@@ -59,8 +59,16 @@ fn main() {
     let perm_mat = get_permutation_matrix(&root);
     let permutated_matrix = &perm_mat * &matrix * &perm_mat.transpose();
     println!("Permuted matrix: {}", permutated_matrix);
+    let permutated_vector = &perm_mat * &vector;
+    println!("Permuted vector: {}", permutated_vector);
 
     print_rooted_tree(&root);
+
+    let start_fast_perm = SystemTime::now();
+    let mut root_perm = get_partition_tree(&permutated_matrix);
+    let duration_tree_gen_perm = start_fast_perm.elapsed().unwrap();
+    let _fast_product_perm = multiply_with_tree(&mut root_perm, &permutated_vector);
+    let duration_fast_full_perm = start_fast_perm.elapsed().unwrap();
 
     println!("Time for tree generation: {:?}", duration_tree_gen);
     println!(
@@ -70,6 +78,18 @@ fn main() {
     println!(
         "Time for full fast multiplication: {:?}",
         duration_fast_full
+    );
+    println!(
+        "Time for tree generation with permutated matrix: {:?}",
+        duration_tree_gen_perm
+    );
+    println!(
+        "Time for multiplication with known tree with permutated matrix: {:?}",
+        duration_fast_full_perm - duration_tree_gen_perm
+    );
+    println!(
+        "Time for full fast multiplication with permutated matrix: {:?}",
+        duration_fast_full_perm
     );
     println!("Time for normal multiplication: {:?}", duration_normal);
 }
