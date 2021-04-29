@@ -5,10 +5,10 @@ use na::{DMatrix, DVector};
 use petgraph::algo::astar;
 use petgraph::prelude::*;
 use petgraph::visit::GetAdjacencyMatrix;
+use ptree::builder::TreeBuilder;
+use ptree::output::print_tree;
 use rand::Rng;
 use rayon::prelude::*;
-use std::fs::File;
-use std::io::{self, BufRead};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
@@ -32,18 +32,8 @@ impl RootedTreeVertex {
 }
 
 fn main() {
-    /*
-    let input = File::open("graph4c.g6");
-    let input_file = match input {
-        Ok(file) => file,
-        Err(_) => return,
-    };
-    let mut lines = io::BufReader::new(input_file).lines();
-    let line = lines.next();
-    */
-
-    let size = 200;
-    let matrix = generate_random_connectivity_matrix(size, 0.1);
+    let size = 30;
+    let matrix = generate_random_connectivity_matrix(size, 0.5);
     println!("{}", &matrix);
     let vector = generate_random_vector(size);
     println!("{}", &vector);
@@ -65,6 +55,12 @@ fn main() {
     } else {
         println!("Different Results!");
     }
+
+    let perm_mat = get_permutation_matrix(&root);
+    let permutated_matrix = &perm_mat * &matrix * &perm_mat.transpose();
+    println!("Permuted matrix: {}", permutated_matrix);
+
+    print_rooted_tree(&root);
 
     println!("Time for tree generation: {:?}", duration_tree_gen);
     println!(
@@ -164,6 +160,7 @@ fn calculate_normal_product(matrix: &DMatrix<f64>, vector: &DVector<f64>) -> DVe
     return product;
 }
 
+#[allow(unused)]
 fn get_vertex_path_matrix(g: &StableUnGraph<(), ()>) -> DMatrix<f64> {
     let vertex_cnt = g.node_count();
     let mut path_matrix = DMatrix::<f64>::zeros(vertex_cnt, vertex_cnt);
@@ -202,6 +199,7 @@ fn get_num_vertex_disjoint_paths(orig_g: &StableUnGraph<(), ()>, from: u32, to: 
     }
 }
 
+#[allow(unused)]
 fn get_edge_path_matrix(g: &StableUnGraph<(), ()>) -> DMatrix<f64> {
     let vertex_cnt = g.node_count();
     let mut path_matrix = DMatrix::<f64>::zeros(vertex_cnt, vertex_cnt);
@@ -239,6 +237,48 @@ fn get_num_edge_disjoint_paths(orig_g: &StableUnGraph<(), ()>, from: u32, to: u3
     }
 }
 
+#[allow(unused)]
+fn get_permutation_matrix(root: &RootedTreeVertex) -> DMatrix<f64> {
+    let size = root.partition.len();
+    let permutations = get_permutations(root);
+    let mut perm_mat = DMatrix::<f64>::zeros(size, size);
+    dbg!(&permutations);
+    for (i, &j) in permutations.iter().enumerate() {
+        perm_mat[(i, j)] = 1.;
+    }
+    return perm_mat;
+}
+
+fn get_permutations(current: &RootedTreeVertex) -> Vec<usize> {
+    if current.partition.len() == 1 {
+        return current.partition.clone();
+    }
+    let mut left = get_permutations(current.left_child.as_ref().unwrap());
+    let right = get_permutations(current.right_child.as_ref().unwrap());
+    left.extend(right.iter());
+    return left;
+}
+
+#[allow(unused)]
+fn print_rooted_tree(root: &RootedTreeVertex) {
+    let mut tree_root = TreeBuilder::new(format!("{:?}", root.partition));
+    construct_tree(root.left_child.as_ref().unwrap(), &mut tree_root);
+    construct_tree(root.right_child.as_ref().unwrap(), &mut tree_root);
+    let tree = tree_root.build();
+    print_tree(&tree).ok();
+}
+
+fn construct_tree(current: &RootedTreeVertex, output_tree: &mut TreeBuilder) {
+    if current.partition.len() == 1 {
+        output_tree.add_empty_child(format!("{:?}", current.partition));
+    } else {
+        output_tree.begin_child(format!("{:?}", current.partition));
+        construct_tree(current.left_child.as_ref().unwrap(), output_tree);
+        construct_tree(current.right_child.as_ref().unwrap(), output_tree);
+        output_tree.end_child();
+    }
+}
+
 fn generate_empty_graph(vertices: usize) -> StableUnGraph<(), ()> {
     let mut g = StableUnGraph::<(), ()>::with_capacity(vertices, 0);
     for _ in 0..vertices {
@@ -260,6 +300,7 @@ fn generate_random_graph(vertices: usize, edge_prob: f64) -> StableUnGraph<(), (
     return g;
 }
 
+#[allow(unused)]
 fn generate_example_matrix() -> DMatrix<f64> {
     let graph = generate_example_graph();
     let mut matrix = get_vertex_path_matrix(&graph);
@@ -283,6 +324,7 @@ fn generate_example_graph() -> StableUnGraph<(), ()> {
     return g;
 }
 
+#[allow(unused)]
 fn generate_random_connectivity_matrix(size: usize, edge_prob: f64) -> DMatrix<f64> {
     let mut rng = rand::thread_rng();
     let g = generate_random_graph(size, edge_prob);
@@ -302,6 +344,7 @@ fn generate_random_vector(size: usize) -> DVector<f64> {
     return vector;
 }
 
+#[allow(unused)]
 fn from_graph6_string(s: &String) -> StableUnGraph<(), ()> {
     let (adj_mat, vertex_cnt) = string_to_adjacency_matrix(s);
     let mut g = generate_empty_graph(vertex_cnt);
@@ -315,6 +358,7 @@ fn from_graph6_string(s: &String) -> StableUnGraph<(), ()> {
     return g;
 }
 
+#[allow(unused)]
 fn to_graph6_string(g: &StableUnGraph<(), ()>) -> String {
     let adj_mat = g.adjacency_matrix();
     let mut adj_vec: Vec<f32> = Vec::new();
