@@ -1,47 +1,29 @@
-extern crate nalgebra as na;
-
+use criterion::{criterion_group, criterion_main, Criterion};
 use graph6::*;
-use na::{DMatrix, DVector};
+use nalgebra::{DMatrix, DVector};
 use petgraph::algo::astar;
 use petgraph::prelude::*;
 use petgraph::visit::GetAdjacencyMatrix;
-use ptree::builder::TreeBuilder;
-use ptree::output::print_tree;
 use rand::Rng;
 use rayon::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
+use ultrametric_multiplication::RootedTreeVertex;
 
-#[derive(Default, Debug, Clone)]
-struct RootedTreeVertex {
-    partition: Vec<usize>,
-    level: f64,
-    level_diff: f64,
-    sum: f64,
-    left_child: Option<Box<RootedTreeVertex>>,
-    right_child: Option<Box<RootedTreeVertex>>,
-}
+criterion_group!(benches, benchmark);
+criterion_main!(benches);
 
-impl RootedTreeVertex {
-    fn new(partition: Vec<usize>) -> RootedTreeVertex {
-        RootedTreeVertex {
-            partition: partition,
-            ..Default::default()
-        }
-    }
-}
-
-fn main() {
-    let size = 1000;
-    let matrix = generate_random_connectivity_matrix(size, 0.01);
+fn benchmark(_c: &mut Criterion) {
+    let size = 200;
+    let matrix = generate_random_connectivity_matrix(size, 0.1);
     println!("{}", &matrix);
     let vector = generate_random_vector(size);
     println!("{}", &vector);
 
     let start_fast = SystemTime::now();
-    let mut root = get_partition_tree(&matrix);
+    let mut root = RootedTreeVertex::get_partition_tree(&matrix);
     let duration_tree_gen = start_fast.elapsed().unwrap();
-    let fast_product = multiply_with_tree(&mut root, &vector);
+    let fast_product = root.multiply_with_tree(&vector);
     let duration_fast_full = start_fast.elapsed().unwrap();
 
     let start_normal = SystemTime::now();
@@ -56,18 +38,18 @@ fn main() {
         println!("Different Results!");
     }
 
-    let perm_mat = get_permutation_matrix(&root);
+    let perm_mat = root.get_permutation_matrix();
     let permutated_matrix = &perm_mat * &matrix * &perm_mat.transpose();
-    println!("Permuted matrix: {}", permutated_matrix);
+    //println!("Permuted matrix: {}", permutated_matrix);
     let permutated_vector = &perm_mat * &vector;
-    println!("Permuted vector: {}", permutated_vector);
+    //println!("Permuted vector: {}", permutated_vector);
 
-    print_rooted_tree(&root);
+    //root.print_rooted_tree();
 
     let start_fast_perm = SystemTime::now();
-    let mut root_perm = get_partition_tree(&permutated_matrix);
+    let mut root_perm = RootedTreeVertex::get_partition_tree(&permutated_matrix);
     let duration_tree_gen_perm = start_fast_perm.elapsed().unwrap();
-    let _fast_product_perm = multiply_with_tree(&mut root_perm, &permutated_vector);
+    let _fast_product_perm = root_perm.multiply_with_tree(&permutated_vector);
     let duration_fast_full_perm = start_fast_perm.elapsed().unwrap();
 
     println!("Time for tree generation: {:?}", duration_tree_gen);
@@ -92,81 +74,6 @@ fn main() {
         duration_fast_full_perm
     );
     println!("Time for normal multiplication: {:?}", duration_normal);
-}
-
-fn get_partition_tree(matrix: &DMatrix<f64>) -> RootedTreeVertex {
-    let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
-    let mut root = RootedTreeVertex::new(vertex_ids);
-    partition_tree_vertex(&matrix, &mut root, 0.0);
-
-    return root;
-}
-
-fn partition_tree_vertex(matrix: &DMatrix<f64>, current: &mut RootedTreeVertex, parent_level: f64) {
-    let first_i = current.partition[0];
-    if current.partition.len() == 1 {
-        current.level_diff = matrix[(first_i, first_i)];
-        current.level = parent_level;
-        return;
-    }
-    let mut left_partition: Vec<usize> = vec![first_i];
-    let mut right_partition: Vec<usize> = Vec::new();
-    let mut min = f64::MAX;
-    for &i in &current.partition[1..] {
-        if min > matrix[(first_i, i)] {
-            min = matrix[(first_i, i)];
-            left_partition.extend(right_partition.iter());
-            right_partition.clear();
-            right_partition.push(i);
-        } else {
-            if min == matrix[(first_i, i)] {
-                right_partition.push(i);
-            } else {
-                left_partition.push(i);
-            }
-        }
-    }
-    current.level = min;
-    current.level_diff = min - parent_level;
-
-    let left_child = Box::new(RootedTreeVertex::new(left_partition));
-    let right_child = Box::new(RootedTreeVertex::new(right_partition));
-    current.left_child = Some(left_child);
-    current.right_child = Some(right_child);
-
-    partition_tree_vertex(matrix, current.left_child.as_mut().unwrap(), current.level);
-    partition_tree_vertex(matrix, current.right_child.as_mut().unwrap(), current.level);
-}
-
-fn multiply_with_tree(root: &mut RootedTreeVertex, vector: &DVector<f64>) -> DVector<f64> {
-    calculate_sums(root, vector);
-    let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
-    calculate_full_product(root, &mut product, 0.0);
-    return product;
-}
-
-fn calculate_sums(current: &mut RootedTreeVertex, vector: &DVector<f64>) -> f64 {
-    if current.partition.len() == 1 {
-        let sum = vector[current.partition[0]];
-        current.sum = (current.level_diff - current.level) * sum;
-        return sum;
-    }
-
-    let left_sum = calculate_sums(current.left_child.as_mut().unwrap(), vector);
-    let right_sum = calculate_sums(current.right_child.as_mut().unwrap(), vector);
-    let sum = left_sum + right_sum;
-    current.sum = sum * current.level_diff;
-    return sum;
-}
-
-fn calculate_full_product(current: &RootedTreeVertex, product: &mut DVector<f64>, prev_sum: f64) {
-    let sum = prev_sum + current.sum;
-    if current.partition.len() == 1 {
-        product[current.partition[0]] = sum;
-        return;
-    }
-    calculate_full_product(current.left_child.as_ref().unwrap(), product, sum);
-    calculate_full_product(current.right_child.as_ref().unwrap(), product, sum);
 }
 
 fn calculate_normal_product(matrix: &DMatrix<f64>, vector: &DVector<f64>) -> DVector<f64> {
@@ -254,48 +161,6 @@ fn get_num_edge_disjoint_paths(orig_g: &StableUnGraph<(), ()>, from: u32, to: u3
                 }
             }
         }
-    }
-}
-
-#[allow(unused)]
-fn get_permutation_matrix(root: &RootedTreeVertex) -> DMatrix<f64> {
-    let size = root.partition.len();
-    let permutations = get_permutations(root);
-    let mut perm_mat = DMatrix::<f64>::zeros(size, size);
-    dbg!(&permutations);
-    for (i, &j) in permutations.iter().enumerate() {
-        perm_mat[(i, j)] = 1.;
-    }
-    return perm_mat;
-}
-
-fn get_permutations(current: &RootedTreeVertex) -> Vec<usize> {
-    if current.partition.len() == 1 {
-        return current.partition.clone();
-    }
-    let mut left = get_permutations(current.left_child.as_ref().unwrap());
-    let right = get_permutations(current.right_child.as_ref().unwrap());
-    left.extend(right.iter());
-    return left;
-}
-
-#[allow(unused)]
-fn print_rooted_tree(root: &RootedTreeVertex) {
-    let mut tree_root = TreeBuilder::new(format!("{:?}", root.partition));
-    construct_tree(root.left_child.as_ref().unwrap(), &mut tree_root);
-    construct_tree(root.right_child.as_ref().unwrap(), &mut tree_root);
-    let tree = tree_root.build();
-    print_tree(&tree).ok();
-}
-
-fn construct_tree(current: &RootedTreeVertex, output_tree: &mut TreeBuilder) {
-    if current.partition.len() == 1 {
-        output_tree.add_empty_child(format!("{:?}", current.partition));
-    } else {
-        output_tree.begin_child(format!("{:?}", current.partition));
-        construct_tree(current.left_child.as_ref().unwrap(), output_tree);
-        construct_tree(current.right_child.as_ref().unwrap(), output_tree);
-        output_tree.end_child();
     }
 }
 
