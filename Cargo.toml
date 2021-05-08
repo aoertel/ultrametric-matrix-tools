@@ -7,10 +7,14 @@ edition = "2018"
 [lib]
 name = "ultrametric_multiplication"
 path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 nalgebra = "*"
 ptree = "*"
+numpy = "*"
+ndarray = "*"
+pyo3 = "*"
 
 [dev-dependencies]
 petgraph = "*"
