@@ -1,20 +1,31 @@
-import ultrametric_multiplication
+import ultrametric_multiplication as um
 import numpy as np
+import time
 
-matrix = np.array([[0., 1, 1, 1, 2, 1, 1, 2],
-                   [1, 0, 1, 3, 1, 2, 2, 1],
-                   [1, 1, 4, 1, 1, 1, 1, 1],
-                   [1, 3, 1, 0, 1, 2, 2, 1],
-                   [2, 1, 1, 1, 2, 1, 1, 2],
-                   [1, 2, 1, 2, 1, 0, 2, 1],
-                   [1, 2, 1, 2, 1, 2, 0, 1],
-                   [2, 1, 1, 1, 2, 1, 1, 0]])
-vector = np.array([1., 2, 3, 4, 5, 6, 7, 8])
+size = 1000
 
-tree = ultrametric_multiplication.RootedTreeVertex(matrix)
-tree.print_rooted_tree()
-product = tree.mult_with_tree(vector)
+matrix = um.TestFunctions().generate_random_connectivity_matrix(size, 0.01)
+vector = np.random.rand(size)
+
+fast_start = time.time()
+tree = um.RootedTreeVertex(matrix)
+after_tree = time.time()
+fast_product = tree.mult_with_tree(vector)
+fast_end = time.time()
+
+normal_start = time.time()
+normal_product = matrix.dot(vector)
+normal_end = time.time()
+
 perm_mat = tree.get_perm_matrix()
-print(product)
-print(matrix.dot(vector))
-print(perm_mat)
+#print("Our Product:")
+# print(fast_product)
+#print("Normal Product:")
+# print(normal_product)
+#print("Permutation Matrix:")
+# print(perm_mat)
+
+print("Time for tree generation:", after_tree - fast_start)
+print("Time for product with known tree:", fast_end - after_tree)
+print("Time for full fast product:", fast_end - fast_start)
+print("Time for normal product:", normal_end - normal_start)

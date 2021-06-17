@@ -15,12 +15,12 @@ ptree = "*"
 numpy = "*"
 ndarray = "*"
 pyo3 = "*"
+rand = "*"
+petgraph = "*"
+rayon = "*"
 
 [dev-dependencies]
-petgraph = "*"
 graph6 = "*"
-rayon = "*"
-rand = "*"
 criterion = "*"
 
 [[bench]]
