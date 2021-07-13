@@ -10,7 +10,6 @@ use pyo3::prelude::*;
 pub struct RootedTreeVertex {
     partition: Vec<usize>,
     level: f64,
-    level_diff: f64,
     sum: f64,
     left_child: Option<Box<RootedTreeVertex>>,
     right_child: Option<Box<RootedTreeVertex>>,
@@ -27,15 +26,14 @@ impl RootedTreeVertex {
     pub fn get_partition_tree(matrix: &DMatrix<f64>) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
         let mut root = RootedTreeVertex::new(vertex_ids);
-        root.partition_tree_vertex(&matrix, 0.0);
+        root.partition_tree_vertex(&matrix);
         return root;
     }
 
-    fn partition_tree_vertex(&mut self, matrix: &DMatrix<f64>, parent_level: f64) {
+    fn partition_tree_vertex(&mut self, matrix: &DMatrix<f64>) {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
-            self.level_diff = matrix[(first_i, first_i)];
-            self.level = parent_level;
+            self.level = matrix[(first_i, first_i)];
             return;
         }
         let mut left_partition: Vec<usize> = vec![first_i];
@@ -56,7 +54,6 @@ impl RootedTreeVertex {
             }
         }
         self.level = min;
-        self.level_diff = min - parent_level;
         let left_child = Box::new(RootedTreeVertex::new(left_partition));
         let right_child = Box::new(RootedTreeVertex::new(right_partition));
         self.left_child = Some(left_child);
@@ -65,30 +62,38 @@ impl RootedTreeVertex {
         self.left_child
             .as_mut()
             .unwrap()
-            .partition_tree_vertex(matrix, self.level);
+            .partition_tree_vertex(matrix);
         self.right_child
             .as_mut()
             .unwrap()
-            .partition_tree_vertex(matrix, self.level);
+            .partition_tree_vertex(matrix);
     }
 
     pub fn multiply_with_tree(&mut self, vector: &DVector<f64>) -> DVector<f64> {
-        self.calculate_sums(vector);
+        self.calculate_sums(vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
         self.calculate_full_product(&mut product, 0.0);
         return product;
     }
 
-    fn calculate_sums(&mut self, vector: &DVector<f64>) -> f64 {
+    fn calculate_sums(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
         if self.partition.len() == 1 {
             let sum = vector[self.partition[0]];
-            self.sum = (self.level_diff - self.level) * sum;
+            self.sum = (self.level - parent_val) * sum;
             return sum;
         }
-        let left_sum = self.left_child.as_mut().unwrap().calculate_sums(vector);
-        let right_sum = self.right_child.as_mut().unwrap().calculate_sums(vector);
+        let left_sum = self
+            .left_child
+            .as_mut()
+            .unwrap()
+            .calculate_sums(vector, self.level);
+        let right_sum = self
+            .right_child
+            .as_mut()
+            .unwrap()
+            .calculate_sums(vector, self.level);
         let sum = left_sum + right_sum;
-        self.sum = sum * self.level_diff;
+        self.sum = sum * (self.level - parent_val);
         return sum;
     }
 
@@ -161,7 +166,7 @@ impl RootedTreeVertex {
 
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
         let mut root = RootedTreeVertex::new(vertex_ids);
-        root.partition_tree_vertex(&matrix, 0.0);
+        root.partition_tree_vertex(&matrix);
         return root;
     }
 
@@ -177,7 +182,7 @@ impl RootedTreeVertex {
             vector[i] = py_array[[i]];
         }
 
-        self.calculate_sums(&vector);
+        self.calculate_sums(&vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
         self.calculate_full_product(&mut product, 0.0);
 
