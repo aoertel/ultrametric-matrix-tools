@@ -34,39 +34,39 @@ impl RootedTreeVertex {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
-            return;
-        }
-        let mut left_partition: Vec<usize> = vec![first_i];
-        let mut right_partition: Vec<usize> = Vec::new();
-        let mut min = f64::MAX;
-        for &i in &self.partition[1..] {
-            if min > matrix[(first_i, i)] {
-                min = matrix[(first_i, i)];
-                left_partition.extend(right_partition.iter());
-                right_partition.clear();
-                right_partition.push(i);
-            } else {
-                if min == matrix[(first_i, i)] {
+        } else {
+            let mut left_partition: Vec<usize> = vec![first_i];
+            let mut right_partition: Vec<usize> = Vec::new();
+            let mut min = f64::MAX;
+            for &i in &self.partition[1..] {
+                if min > matrix[(first_i, i)] {
+                    min = matrix[(first_i, i)];
+                    left_partition.extend(right_partition.iter());
+                    right_partition.clear();
                     right_partition.push(i);
                 } else {
-                    left_partition.push(i);
+                    if min == matrix[(first_i, i)] {
+                        right_partition.push(i);
+                    } else {
+                        left_partition.push(i);
+                    }
                 }
             }
-        }
-        self.level = min;
-        let left_child = Box::new(RootedTreeVertex::new(left_partition));
-        let right_child = Box::new(RootedTreeVertex::new(right_partition));
-        self.left_child = Some(left_child);
-        self.right_child = Some(right_child);
+            self.level = min;
+            let left_child = Box::new(RootedTreeVertex::new(left_partition));
+            let right_child = Box::new(RootedTreeVertex::new(right_partition));
+            self.left_child = Some(left_child);
+            self.right_child = Some(right_child);
 
-        self.left_child
-            .as_mut()
-            .unwrap()
-            .partition_tree_vertex(matrix);
-        self.right_child
-            .as_mut()
-            .unwrap()
-            .partition_tree_vertex(matrix);
+            self.left_child
+                .as_mut()
+                .unwrap()
+                .partition_tree_vertex(matrix);
+            self.right_child
+                .as_mut()
+                .unwrap()
+                .partition_tree_vertex(matrix);
+        }
     }
 
     pub fn multiply_with_tree(&mut self, vector: &DVector<f64>) -> DVector<f64> {
@@ -77,23 +77,23 @@ impl RootedTreeVertex {
     }
 
     fn calculate_sums(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
+        let sum: f64;
         if self.partition.len() == 1 {
-            let sum = vector[self.partition[0]];
-            self.sum = (self.level - parent_val) * sum;
-            return sum;
+            sum = vector[self.partition[0]];
+        } else {
+            let left_sum = self
+                .left_child
+                .as_mut()
+                .unwrap()
+                .calculate_sums(vector, self.level);
+            let right_sum = self
+                .right_child
+                .as_mut()
+                .unwrap()
+                .calculate_sums(vector, self.level);
+            sum = left_sum + right_sum;
         }
-        let left_sum = self
-            .left_child
-            .as_mut()
-            .unwrap()
-            .calculate_sums(vector, self.level);
-        let right_sum = self
-            .right_child
-            .as_mut()
-            .unwrap()
-            .calculate_sums(vector, self.level);
-        let sum = left_sum + right_sum;
-        self.sum = sum * (self.level - parent_val);
+        self.sum = (self.level - parent_val) * sum;
         return sum;
     }
 
@@ -101,16 +101,16 @@ impl RootedTreeVertex {
         let sum = prev_sum + self.sum;
         if self.partition.len() == 1 {
             product[self.partition[0]] = sum;
-            return;
+        } else {
+            self.left_child
+                .as_ref()
+                .unwrap()
+                .calculate_full_product(product, sum);
+            self.right_child
+                .as_ref()
+                .unwrap()
+                .calculate_full_product(product, sum);
         }
-        self.left_child
-            .as_ref()
-            .unwrap()
-            .calculate_full_product(product, sum);
-        self.right_child
-            .as_ref()
-            .unwrap()
-            .calculate_full_product(product, sum);
     }
 
     pub fn get_permutation_matrix(&self) -> DMatrix<f64> {
