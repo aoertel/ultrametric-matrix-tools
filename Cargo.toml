@@ -26,3 +26,7 @@ criterion = "*"
 [[bench]]
 name = "multiplication_test"
 harness = false
+
+[[bench]]
+name = "property_check_test"
+harness = false
