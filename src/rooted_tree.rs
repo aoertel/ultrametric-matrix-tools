@@ -69,6 +69,52 @@ impl RootedTreeVertex {
         }
     }
 
+    pub fn get_approximate_partition_tree(matrix: &DMatrix<f64>, eps: f64) -> Self {
+        let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
+        let mut root = RootedTreeVertex::new(vertex_ids);
+        root.approximate_partition_tree_vertex(&matrix, eps);
+        return root;
+    }
+
+    fn approximate_partition_tree_vertex(&mut self, matrix: &DMatrix<f64>, eps: f64) {
+        let first_i = self.partition[0];
+        if self.partition.len() == 1 {
+            self.level = matrix[(first_i, first_i)];
+        } else {
+            let mut left_partition: Vec<usize> = vec![first_i];
+            let mut right_partition: Vec<usize> = Vec::new();
+            let mut min = f64::MAX;
+
+            for &i in &self.partition[1..] {
+                if matrix[(first_i, i)] < min {
+                    min = matrix[(first_i, i)];
+                }
+            }
+            for &i in &self.partition[1..] {
+                if matrix[(first_i, i)] <= min + eps {
+                    right_partition.push(i);
+                } else {
+                    left_partition.push(i);
+                }
+            }
+
+            self.level = min;
+            let left_child = Box::new(RootedTreeVertex::new(left_partition));
+            let right_child = Box::new(RootedTreeVertex::new(right_partition));
+            self.left_child = Some(left_child);
+            self.right_child = Some(right_child);
+
+            self.left_child
+                .as_mut()
+                .unwrap()
+                .partition_tree_vertex(matrix);
+            self.right_child
+                .as_mut()
+                .unwrap()
+                .partition_tree_vertex(matrix);
+        }
+    }
+
     pub fn multiply_with_tree(&mut self, vector: &DVector<f64>) -> DVector<f64> {
         self.calculate_sums(vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
