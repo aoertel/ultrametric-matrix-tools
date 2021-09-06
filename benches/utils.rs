@@ -174,3 +174,35 @@ pub fn to_graph6_string(g: &StableUnGraph<(), ()>) -> String {
     }
     return adjacency_matrix_to_string(&adj_vec, g.node_count());
 }
+
+#[allow(unused)]
+pub fn generate_random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    ultrametric_matrix_recursion(&mut matrix, 0, size - 1, 1.);
+    let mut rng = rand::thread_rng();
+    for i in 0..size {
+        matrix[(i, i)] = rng.gen_range(0..size) as f64;
+    }
+    return matrix;
+}
+
+#[allow(unused)]
+fn ultrametric_matrix_recursion(
+    mut matrix: &mut DMatrix<f64>,
+    lower: usize,
+    upper: usize,
+    value: f64,
+) {
+    if upper >= lower + 1 {
+        let mut rng = rand::thread_rng();
+        let seperator = rng.gen_range(lower..upper) + 1;
+        for i in lower..seperator {
+            for j in seperator..(upper + 1) {
+                matrix[(i, j)] = value;
+                matrix[(j, i)] = value;
+            }
+        }
+        ultrametric_matrix_recursion(matrix, lower, seperator - 1, value + 1.);
+        ultrametric_matrix_recursion(matrix, seperator, upper, value + 1.);
+    }
+}

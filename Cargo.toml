@@ -18,6 +18,7 @@ pyo3 = "*"
 rand = "*"
 petgraph = "*"
 rayon = "*"
+csv = "*"
 
 [dev-dependencies]
 graph6 = "*"
@@ -29,4 +30,8 @@ harness = false
 
 [[bench]]
 name = "property_check_test"
+harness = false
+
+[[bench]]
+name = "performance"
 harness = false

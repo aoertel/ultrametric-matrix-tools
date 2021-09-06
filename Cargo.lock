@@ -274,6 +274,7 @@ name = "fast-matrix-vector-multiplication"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "csv",
  "graph6",
  "nalgebra",
  "ndarray",

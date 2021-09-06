@@ -9,3 +9,6 @@ test_python: copy_python
 
 bench:
 	cargo criterion
+
+bench_performance:
+	cargo criterion --bench performance
