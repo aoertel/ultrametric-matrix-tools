@@ -12,3 +12,6 @@ bench:
 
 bench_performance:
 	cargo criterion --bench performance
+
+bench_jacobi:
+	cargo criterion --bench jacobi_test

@@ -35,3 +35,7 @@ harness = false
 [[bench]]
 name = "performance"
 harness = false
+
+[[bench]]
+name = "jacobi_test"
+harness = false
