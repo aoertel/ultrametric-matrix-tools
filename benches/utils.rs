@@ -206,15 +206,6 @@ fn ultrametric_matrix_recursion(matrix: &mut DMatrix<f64>, lower: usize, upper: 
 pub fn generate_random_permutation(size: usize) -> Vec<usize> {
     let mut rng = thread_rng();
     let mut element_vector: Vec<usize> = (0..size).collect();
-    let mut perm_vecor: Vec<usize> = Vec::new();
-    while !element_vector.is_empty() {
-        let &element = element_vector.choose(&mut rng).unwrap();
-        perm_vecor.push(element);
-        for (i, &elem) in element_vector.clone().iter().enumerate() {
-            if elem == element {
-                element_vector.remove(i);
-            }
-        }
-    }
-    return perm_vecor;
+    element_vector.shuffle(&mut rng);
+    return element_vector;
 }
