@@ -9,6 +9,7 @@ use pyo3::prelude::*;
 #[derive(Default)]
 pub struct RootedTreeVertex {
     partition: Vec<usize>,
+    partition_leaves: Vec<usize>,
     level: f64,
     sum: f64,
     children: Vec<Box<RootedTreeVertex>>,
@@ -33,6 +34,8 @@ impl RootedTreeVertex {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
+            self.partition.remove(0);
+            self.partition_leaves.push(first_i);
         } else {
             let mut left_partition: Vec<usize> = vec![first_i];
             let mut right_partition: Vec<usize> = Vec::new();
@@ -73,6 +76,8 @@ impl RootedTreeVertex {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
+            self.partition.remove(0);
+            self.partition_leaves.push(first_i);
         } else {
             let mut left_partition: Vec<usize> = vec![first_i];
             let mut right_partition: Vec<usize> = Vec::new();
@@ -113,16 +118,11 @@ impl RootedTreeVertex {
 
     fn calculate_sums(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
         let mut sum = 0.;
-        let mut children_partitions: Vec<usize> = Vec::new();
-        for child in self.children.iter() {
-            children_partitions.extend(&child.partition);
+        for &leaf_idx in self.partition_leaves.iter() {
+            sum += vector[leaf_idx];
         }
-        if self.partition.len() == 1 {
-            sum = vector[self.partition[0]];
-        } else {
-            for child in self.children.iter_mut() {
-                sum += child.calculate_sums(vector, self.level);
-            }
+        for child in self.children.iter_mut() {
+            sum += child.calculate_sums(vector, self.level);
         }
         self.sum = (self.level - parent_val) * sum;
         return sum;
@@ -130,12 +130,11 @@ impl RootedTreeVertex {
 
     fn calculate_full_product(&self, product: &mut DVector<f64>, prev_sum: f64) {
         let sum = prev_sum + self.sum;
-        if self.partition.len() == 1 {
-            product[self.partition[0]] = sum;
-        } else {
-            for child in self.children.iter() {
-                child.calculate_full_product(product, sum);
-            }
+        for &leaf_id in self.partition_leaves.iter() {
+            product[leaf_id] = sum;
+        }
+        for child in self.children.iter() {
+            child.calculate_full_product(product, sum);
         }
     }
 
@@ -150,21 +149,19 @@ impl RootedTreeVertex {
     }
 
     fn get_permutations(&self) -> Vec<usize> {
-        if self.partition.len() == 1 {
-            return self.partition.clone();
-        }
         let mut perm: Vec<usize> = Vec::new();
         for child in self.children.iter() {
             perm.extend(child.get_permutations());
         }
+        perm.extend(self.partition_leaves.clone());
         return perm;
     }
 
     fn construct_tree(&self, output_tree: &mut TreeBuilder) {
-        if self.partition.len() == 1 {
-            output_tree.add_empty_child(format!("{:?}", self.partition));
+        if self.partition.is_empty() {
+            output_tree.add_empty_child(format!("{:?}", self.partition_leaves));
         } else {
-            output_tree.begin_child(format!("{:?}", self.partition));
+            output_tree.begin_child(format!("{:?}, {:?}", self.partition, self.partition_leaves));
             for child in self.children.iter() {
                 child.construct_tree(output_tree);
             }
