@@ -11,8 +11,7 @@ pub struct RootedTreeVertex {
     partition: Vec<usize>,
     level: f64,
     sum: f64,
-    left_child: Option<Box<RootedTreeVertex>>,
-    right_child: Option<Box<RootedTreeVertex>>,
+    children: Vec<Box<RootedTreeVertex>>,
 }
 
 impl RootedTreeVertex {
@@ -55,17 +54,11 @@ impl RootedTreeVertex {
             self.level = min;
             let left_child = Box::new(RootedTreeVertex::new(left_partition));
             let right_child = Box::new(RootedTreeVertex::new(right_partition));
-            self.left_child = Some(left_child);
-            self.right_child = Some(right_child);
+            self.children.push(left_child);
+            self.children.push(right_child);
 
-            self.left_child
-                .as_mut()
-                .unwrap()
-                .partition_tree_vertex(matrix);
-            self.right_child
-                .as_mut()
-                .unwrap()
-                .partition_tree_vertex(matrix);
+            self.children[0].as_mut().partition_tree_vertex(matrix);
+            self.children[1].as_mut().partition_tree_vertex(matrix);
         }
     }
 
@@ -101,19 +94,15 @@ impl RootedTreeVertex {
             self.level = min;
             let left_child = Box::new(RootedTreeVertex::new(left_partition));
             let right_child = Box::new(RootedTreeVertex::new(right_partition));
-            self.left_child = Some(left_child);
-            self.right_child = Some(right_child);
+            self.children.push(left_child);
+            self.children.push(right_child);
 
-            self.left_child
-                .as_mut()
-                .unwrap()
-                .partition_tree_vertex(matrix);
-            self.right_child
-                .as_mut()
-                .unwrap()
-                .partition_tree_vertex(matrix);
+            self.children[0].as_mut().partition_tree_vertex(matrix);
+            self.children[1].as_mut().partition_tree_vertex(matrix);
         }
     }
+
+    pub fn prune_tree(&mut self) {}
 
     pub fn multiply_with_tree(&mut self, vector: &DVector<f64>) -> DVector<f64> {
         self.calculate_sums(vector, 0.0);
@@ -123,21 +112,17 @@ impl RootedTreeVertex {
     }
 
     fn calculate_sums(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
-        let sum: f64;
+        let mut sum = 0.;
+        let mut children_partitions: Vec<usize> = Vec::new();
+        for child in self.children.iter() {
+            children_partitions.extend(&child.partition);
+        }
         if self.partition.len() == 1 {
             sum = vector[self.partition[0]];
         } else {
-            let left_sum = self
-                .left_child
-                .as_mut()
-                .unwrap()
-                .calculate_sums(vector, self.level);
-            let right_sum = self
-                .right_child
-                .as_mut()
-                .unwrap()
-                .calculate_sums(vector, self.level);
-            sum = left_sum + right_sum;
+            for child in self.children.iter_mut() {
+                sum += child.calculate_sums(vector, self.level);
+            }
         }
         self.sum = (self.level - parent_val) * sum;
         return sum;
@@ -148,14 +133,9 @@ impl RootedTreeVertex {
         if self.partition.len() == 1 {
             product[self.partition[0]] = sum;
         } else {
-            self.left_child
-                .as_ref()
-                .unwrap()
-                .calculate_full_product(product, sum);
-            self.right_child
-                .as_ref()
-                .unwrap()
-                .calculate_full_product(product, sum);
+            for child in self.children.iter() {
+                child.calculate_full_product(product, sum);
+            }
         }
     }
 
@@ -173,10 +153,11 @@ impl RootedTreeVertex {
         if self.partition.len() == 1 {
             return self.partition.clone();
         }
-        let mut left = self.left_child.as_ref().unwrap().get_permutations();
-        let right = self.right_child.as_ref().unwrap().get_permutations();
-        left.extend(right.iter());
-        return left;
+        let mut perm: Vec<usize> = Vec::new();
+        for child in self.children.iter() {
+            perm.extend(child.get_permutations());
+        }
+        return perm;
     }
 
     fn construct_tree(&self, output_tree: &mut TreeBuilder) {
@@ -184,14 +165,9 @@ impl RootedTreeVertex {
             output_tree.add_empty_child(format!("{:?}", self.partition));
         } else {
             output_tree.begin_child(format!("{:?}", self.partition));
-            self.right_child
-                .as_ref()
-                .unwrap()
-                .construct_tree(output_tree);
-            self.left_child
-                .as_ref()
-                .unwrap()
-                .construct_tree(output_tree);
+            for child in self.children.iter() {
+                child.construct_tree(output_tree);
+            }
             output_tree.end_child();
         }
     }
@@ -255,14 +231,9 @@ impl RootedTreeVertex {
 
     pub fn print_rooted_tree(&self) {
         let mut tree_root = TreeBuilder::new(format!("{:?}", self.partition));
-        self.right_child
-            .as_ref()
-            .unwrap()
-            .construct_tree(&mut tree_root);
-        self.left_child
-            .as_ref()
-            .unwrap()
-            .construct_tree(&mut tree_root);
+        for child in self.children.iter() {
+            child.construct_tree(&mut tree_root);
+        }
         let tree = tree_root.build();
         print_tree(&tree).ok();
     }
