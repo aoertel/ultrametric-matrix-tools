@@ -3,7 +3,8 @@ use nalgebra::{DMatrix, DVector};
 use petgraph::algo::astar;
 use petgraph::prelude::*;
 use petgraph::visit::GetAdjacencyMatrix;
-use rand::Rng;
+use rand::seq::SliceRandom;
+use rand::{thread_rng, Rng};
 use rayon::prelude::*;
 use std::sync::{Arc, Mutex};
 
@@ -186,13 +187,7 @@ pub fn generate_random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     return matrix;
 }
 
-#[allow(unused)]
-fn ultrametric_matrix_recursion(
-    mut matrix: &mut DMatrix<f64>,
-    lower: usize,
-    upper: usize,
-    value: f64,
-) {
+fn ultrametric_matrix_recursion(matrix: &mut DMatrix<f64>, lower: usize, upper: usize, value: f64) {
     if upper >= lower + 1 {
         let mut rng = rand::thread_rng();
         let seperator = rng.gen_range(lower..upper) + 1;
@@ -205,4 +200,21 @@ fn ultrametric_matrix_recursion(
         ultrametric_matrix_recursion(matrix, lower, seperator - 1, value + 1.);
         ultrametric_matrix_recursion(matrix, seperator, upper, value + 1.);
     }
+}
+
+#[allow(unused)]
+pub fn generate_random_permutation(size: usize) -> Vec<usize> {
+    let mut rng = thread_rng();
+    let mut element_vector: Vec<usize> = (0..size).collect();
+    let mut perm_vecor: Vec<usize> = Vec::new();
+    while !element_vector.is_empty() {
+        let &element = element_vector.choose(&mut rng).unwrap();
+        perm_vecor.push(element);
+        for (i, &elem) in element_vector.clone().iter().enumerate() {
+            if elem == element {
+                element_vector.remove(i);
+            }
+        }
+    }
+    return perm_vecor;
 }
