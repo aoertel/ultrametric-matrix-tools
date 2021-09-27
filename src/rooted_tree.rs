@@ -34,7 +34,6 @@ impl RootedTreeVertex {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
-            self.partition.remove(0);
             self.partition_leaves.push(first_i);
         } else {
             let mut left_partition: Vec<usize> = vec![first_i];
@@ -76,7 +75,6 @@ impl RootedTreeVertex {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
-            self.partition.remove(0);
             self.partition_leaves.push(first_i);
         } else {
             let mut left_partition: Vec<usize> = vec![first_i];
@@ -107,7 +105,60 @@ impl RootedTreeVertex {
         }
     }
 
-    pub fn prune_tree(&mut self) {}
+    pub fn prune_tree(&mut self) {
+        let mut new_children: Vec<Box<RootedTreeVertex>> = Vec::new();
+        let mut remove_ids: Vec<usize> = Vec::new();
+        for (id, child) in self.children.iter_mut().enumerate() {
+            child.prune_tree();
+            if child.level == self.level {
+                self.partition_leaves.extend(&child.partition_leaves);
+                new_children.append(&mut child.children);
+                remove_ids.push(id);
+            }
+        }
+        remove_ids.sort();
+        remove_ids.reverse();
+        for &id in remove_ids.iter() {
+            self.children.remove(id);
+        }
+        self.children.extend(new_children);
+    }
+
+    pub fn reconstruct_matrix(&self) -> DMatrix<f64> {
+        let size = self.partition.len();
+        let mut matrix = DMatrix::<f64>::zeros(size, size);
+        self.reconstruct_matrix_recursive(&mut matrix);
+        return matrix;
+    }
+
+    fn reconstruct_matrix_recursive(&self, matrix: &mut DMatrix<f64>) {
+        for &i in self.partition_leaves.iter() {
+            matrix[(i, i)] = self.level;
+        }
+        for child_id1 in 0..self.children.len() {
+            for &i1 in self.children[child_id1].partition.iter() {
+                for child_id2 in (child_id1 + 1)..self.children.len() {
+                    for &i2 in self.children[child_id2].partition.iter() {
+                        matrix[(i1, i2)] = self.level;
+                        matrix[(i2, i1)] = self.level;
+                    }
+                }
+                for &i in self.partition_leaves.iter() {
+                    matrix[(i, i1)] = self.level;
+                    matrix[(i1, i)] = self.level;
+                }
+            }
+            self.children[child_id1].reconstruct_matrix_recursive(matrix);
+        }
+        for leaf_id1 in 0..self.partition_leaves.len() {
+            for leaf_id2 in (leaf_id1 + 1)..self.partition_leaves.len() {
+                let leaf1 = self.partition_leaves[leaf_id1];
+                let leaf2 = self.partition_leaves[leaf_id2];
+                matrix[(leaf1, leaf2)] = self.level;
+                matrix[(leaf2, leaf1)] = self.level;
+            }
+        }
+    }
 
     pub fn multiply_with_tree(&mut self, vector: &DVector<f64>) -> DVector<f64> {
         self.calculate_sums(vector, 0.0);
@@ -158,10 +209,16 @@ impl RootedTreeVertex {
     }
 
     fn construct_tree(&self, output_tree: &mut TreeBuilder) {
-        if self.partition.is_empty() {
-            output_tree.add_empty_child(format!("{:?}", self.partition_leaves));
+        if self.children.is_empty() {
+            output_tree.add_empty_child(format!(
+                "{:?}, {:?}, {}",
+                self.partition, self.partition_leaves, self.level
+            ));
         } else {
-            output_tree.begin_child(format!("{:?}, {:?}", self.partition, self.partition_leaves));
+            output_tree.begin_child(format!(
+                "{:?}, {:?}, {}",
+                self.partition, self.partition_leaves, self.level
+            ));
             for child in self.children.iter() {
                 child.construct_tree(output_tree);
             }
@@ -227,7 +284,10 @@ impl RootedTreeVertex {
     }
 
     pub fn print_rooted_tree(&self) {
-        let mut tree_root = TreeBuilder::new(format!("{:?}", self.partition));
+        let mut tree_root = TreeBuilder::new(format!(
+            "{:?}, {:?}, {}",
+            self.partition, self.partition_leaves, self.level
+        ));
         for child in self.children.iter() {
             child.construct_tree(&mut tree_root);
         }

@@ -36,8 +36,8 @@ fn benchmark_single(_c: &mut Criterion) {
         let mut complete_tree_mult_times: Vec<f64> = Vec::new();
         let mut normal_mult_times: Vec<f64> = Vec::new();
         for _ in 0..NUM_SAMPLES {
-            let matrix = utils::generate_random_ultrametric_matrix(size);
-            let vector = utils::generate_random_vector(size);
+            let matrix = utils::random_ultrametric_matrix(size);
+            let vector = utils::random_vector(size);
 
             let start_tree_gen = SystemTime::now();
             let mut root = RootedTreeVertex::get_partition_tree(&matrix);
@@ -129,8 +129,8 @@ fn benchmark_multiple(_c: &mut Criterion) {
         let mut complete_tree_mult_times: Vec<f64> = Vec::new();
         let mut normal_mult_times: Vec<f64> = Vec::new();
         for _ in 0..NUM_SAMPLES {
-            let matrix = utils::generate_random_ultrametric_matrix(size);
-            let vector = utils::generate_random_vector(size);
+            let matrix = utils::random_ultrametric_matrix(size);
+            let vector = utils::random_vector(size);
 
             let start_tree_gen = SystemTime::now();
             let mut root = RootedTreeVertex::get_partition_tree(&matrix);

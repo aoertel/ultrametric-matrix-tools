@@ -9,14 +9,27 @@ criterion_group!(benches, benchmark);
 criterion_main!(benches);
 
 fn benchmark(_c: &mut Criterion) {
-    let size = 200;
-    let matrix = utils::generate_random_connectivity_matrix(size, 0.1);
-    println!("{}", &matrix);
-    let vector = utils::generate_random_vector(size);
-    println!("{}", &vector);
+    let size = 5;
+    let matrix = utils::random_ultrametric_matrix(size);
+    //let matrix = DMatrix::<f64>::repeat(size, size, 1.);
+    //println!("{}", &matrix);
+    let vector = utils::random_vector(size);
+    //println!("{}", &vector);
 
     let start_fast = SystemTime::now();
     let mut root = RootedTreeVertex::get_partition_tree(&matrix);
+    let reconstructed_matrix = root.reconstruct_matrix();
+    root.prune_tree();
+    let pruned_matrix = root.reconstruct_matrix();
+    if !pruned_matrix.eq(&matrix) {
+        let mut root = RootedTreeVertex::get_partition_tree(&matrix);
+        root.print_rooted_tree();
+        root.prune_tree();
+        root.print_rooted_tree();
+        println!("{}", &matrix);
+        println!("{}", &reconstructed_matrix);
+        println!("{}", &pruned_matrix);
+    }
     let duration_tree_gen = start_fast.elapsed().unwrap();
     let fast_product = root.multiply_with_tree(&vector);
     let duration_fast_full = start_fast.elapsed().unwrap();
@@ -25,8 +38,8 @@ fn benchmark(_c: &mut Criterion) {
     let normal_product = calculate_normal_product(&matrix, &vector);
     let duration_normal = start_normal.elapsed().unwrap();
 
-    println!("Fast product: {}", &fast_product);
-    println!("Normal product: {}", &normal_product);
+    //println!("Fast product: {}", &fast_product);
+    //println!("Normal product: {}", &normal_product);
     if normal_product == fast_product {
         println!("Same Results!");
     } else {

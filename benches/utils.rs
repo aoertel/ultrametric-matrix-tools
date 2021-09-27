@@ -142,7 +142,7 @@ pub fn generate_random_connectivity_matrix(size: usize, edge_prob: f64) -> DMatr
 }
 
 #[allow(unused)]
-pub fn generate_random_vector(size: usize) -> DVector<f64> {
+pub fn random_vector(size: usize) -> DVector<f64> {
     let mut rng = rand::thread_rng();
     let mut vector = DVector::<f64>::zeros(size);
     for i in 0..size {
@@ -177,7 +177,7 @@ pub fn to_graph6_string(g: &StableUnGraph<(), ()>) -> String {
 }
 
 #[allow(unused)]
-pub fn generate_random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
+pub fn random_terrace_size_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     let mut matrix = DMatrix::<f64>::zeros(size, size);
     ultrametric_matrix_recursion(&mut matrix, 0, size - 1, 1.);
     let mut rng = rand::thread_rng();
@@ -203,9 +203,38 @@ fn ultrametric_matrix_recursion(matrix: &mut DMatrix<f64>, lower: usize, upper: 
 }
 
 #[allow(unused)]
-pub fn generate_random_permutation(size: usize) -> Vec<usize> {
+pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    let mut rng = rand::thread_rng();
+    for i in 1..size {
+        let elem = rng.gen_range(1..size) as f64;
+        matrix[(i - 1, i)] = elem;
+        matrix[(i, i - 1)] = elem;
+    }
+    for i in (0..(size - 2)).rev() {
+        for k in (i + 2)..size {
+            let elem = f64::min(matrix[(i, k - 1)], matrix[(i + 1, k)]);
+            matrix[(i, k)] = elem;
+            matrix[(k, i)] = elem;
+        }
+    }
+    let diag = random_vector(size);
+    for i in 0..size {
+        matrix[(i, i)] = diag[i];
+    }
+    let permutation = random_permutation(size);
+    matrix = &permutation * matrix * &permutation.transpose();
+    return matrix;
+}
+
+#[allow(unused)]
+fn random_permutation(size: usize) -> DMatrix<f64> {
     let mut rng = thread_rng();
     let mut element_vector: Vec<usize> = (0..size).collect();
     element_vector.shuffle(&mut rng);
-    return element_vector;
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    for (i, &j) in element_vector.iter().enumerate() {
+        matrix[(i, j)] = 1.0;
+    }
+    return matrix;
 }

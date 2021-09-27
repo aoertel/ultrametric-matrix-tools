@@ -15,3 +15,6 @@ bench_performance:
 
 bench_jacobi:
 	cargo criterion --bench jacobi_test
+
+bench_test:
+	cargo criterion --bench multiplication_test

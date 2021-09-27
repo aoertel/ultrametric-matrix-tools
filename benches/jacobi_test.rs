@@ -11,16 +11,16 @@ criterion_main!(benches);
 fn benchmark_jacobi(_c: &mut Criterion) {
     let size = 20000;
     let diag_elem = (size * size) as f64;
-    let mut matrix = utils::generate_random_ultrametric_matrix(size);
+    let mut matrix = utils::random_ultrametric_matrix(size);
     let mut off_diag = matrix.clone();
     let mut diag = DVector::zeros(size);
     for i in 0..size {
         diag[i] = diag_elem;
         matrix[(i, i)] = diag_elem;
         off_diag[(i, i)] = 0.;
-    } 
-    let b = utils::generate_random_vector(size);
-    let x_start = utils::generate_random_vector(size);
+    }
+    let b = utils::random_vector(size);
+    let x_start = utils::random_vector(size);
     let mut x = x_start.clone();
     let mut conv = ((&matrix * &x) - &b).norm();
 
@@ -56,5 +56,8 @@ fn benchmark_jacobi(_c: &mut Criterion) {
     println!("Normal time: {:?}", duration_normal);
     println!("Tree gen time: {:?}", duration_tree_gen);
     println!("Fast Jacobi alone time: {:?}", duration_fast);
-    println!("Fast Jacobi complete time: {:?}", duration_tree_gen + duration_fast);
+    println!(
+        "Fast Jacobi complete time: {:?}",
+        duration_tree_gen + duration_fast
+    );
 }
