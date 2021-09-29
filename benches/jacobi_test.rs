@@ -2,62 +2,222 @@ mod utils;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use nalgebra::DVector;
+use std::io;
 use std::time::SystemTime;
 use ultrametric_multiplication::RootedTreeVertex;
 
 criterion_group!(benches, benchmark_jacobi);
 criterion_main!(benches);
 
+const MATRIX_SIZES: [usize; 8] = [10, 100, 250, 500, 1_000, 2_500, 5_000, 10_000];
+const NUM_SAMPLES: u32 = 1000;
+const MAX_ITERATIONS: u32 = 1000000;
+const TOLERANCE: f64 = 10e-6;
+const HEADER_SINGLE: [&str; 16] = [
+    "pos",
+    "size",
+    "tree_gen_mean",
+    "tree_gen_std",
+    "tree_algo_mean",
+    "tree_algo_std",
+    "complete_tree_algo_mean",
+    "complete_tree_algo_std",
+    "prune_tree_mean",
+    "prune_tree_std",
+    "pruned_tree_algo_mean",
+    "pruned_tree_algo_std",
+    "complete_pruned_tree_algo_mean",
+    "complete_pruned_tree_algo_std",
+    "normal_algo_mean",
+    "normal_algo_std",
+];
+
 fn benchmark_jacobi(_c: &mut Criterion) {
-    let size = 20000;
-    let diag_elem = (size * size) as f64;
-    let mut matrix = utils::random_ultrametric_matrix(size);
-    let mut off_diag = matrix.clone();
-    let mut diag = DVector::zeros(size);
-    for i in 0..size {
-        diag[i] = diag_elem;
-        matrix[(i, i)] = diag_elem;
-        off_diag[(i, i)] = 0.;
-    }
-    let b = utils::random_vector(size);
-    let x_start = utils::random_vector(size);
-    let mut x = x_start.clone();
-    let mut conv = ((&matrix * &x) - &b).norm();
+    let mut pos = 0;
+    let mut wtr = csv::WriterBuilder::new()
+        .delimiter(b',')
+        .from_writer(io::stdout());
+    wtr.write_record(&HEADER_SINGLE).unwrap();
+    for &size in MATRIX_SIZES.iter() {
+        let mut tree_gen_times: Vec<f64> = Vec::new();
+        let mut tree_algo_times: Vec<f64> = Vec::new();
+        let mut complete_tree_times: Vec<f64> = Vec::new();
+        let mut prune_tree_times: Vec<f64> = Vec::new();
+        let mut pruned_tree_algo_times: Vec<f64> = Vec::new();
+        let mut complete_pruned_tree_times: Vec<f64> = Vec::new();
+        let mut normal_algo_times: Vec<f64> = Vec::new();
+        for _ in 0..NUM_SAMPLES {
+            let mut matrix = utils::random_ultrametric_matrix(size);
+            let mut off_diag = matrix.clone();
+            let mut diag = DVector::zeros(size);
+            for i in 0..size {
+                let mut diag_elem = 1.0;
+                for j in 0..size {
+                    if i != j {
+                        diag_elem += matrix[(i, j)];
+                    }
+                }
+                diag[i] = diag_elem;
+                matrix[(i, i)] = diag_elem;
+                off_diag[(i, i)] = 0.;
+            }
+            let b = utils::random_vector(size);
+            let b_norm = b.norm();
+            let x_start = utils::random_vector(size);
 
-    let start_normal = SystemTime::now();
-    while conv > 10e-4 {
-        let sigma = &off_diag * &x;
-        let diff = &b - sigma;
-        for i in 0..size {
-            x[i] = diff[i] / diag[i];
+            let mut x = x_start.clone();
+            let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
+
+            let start_tree_gen = SystemTime::now();
+            let mut off_diag_tree = RootedTreeVertex::get_partition_tree(&off_diag);
+            let mut full_tree = RootedTreeVertex::get_partition_tree(&matrix);
+            let duration_tree_gen = start_tree_gen.elapsed().unwrap();
+
+            let start_fast = SystemTime::now();
+            for i in 0..MAX_ITERATIONS {
+                if conv <= TOLERANCE {
+                    if i == MAX_ITERATIONS - 1 {
+                        dbg!("max!");
+                    }
+                    break;
+                }
+                let sigma = off_diag_tree.multiply_with_tree(&x);
+                let diff = &b - sigma;
+                for i in 0..size {
+                    x[i] = diff[i] / diag[i];
+                }
+                conv = (full_tree.multiply_with_tree(&x) - &b).norm() / b_norm;
+            }
+            let duration_fast = start_fast.elapsed().unwrap();
+            tree_gen_times.push(duration_tree_gen.as_secs_f64());
+            tree_algo_times.push(duration_fast.as_secs_f64());
+            complete_tree_times.push(duration_tree_gen.as_secs_f64() + duration_fast.as_secs_f64());
+
+            let mut x = x_start.clone();
+            let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
+
+            let start_prune_tree = SystemTime::now();
+            off_diag_tree.prune_tree();
+            full_tree.prune_tree();
+            let duration_prune_tree = start_prune_tree.elapsed().unwrap();
+
+            let start_pruned_fast = SystemTime::now();
+            for i in 0..MAX_ITERATIONS {
+                if conv <= TOLERANCE {
+                    if i == MAX_ITERATIONS - 1 {
+                        dbg!("max!");
+                    }
+                    break;
+                }
+                let sigma = off_diag_tree.multiply_with_tree(&x);
+                let diff = &b - sigma;
+                for i in 0..size {
+                    x[i] = diff[i] / diag[i];
+                }
+                conv = (full_tree.multiply_with_tree(&x) - &b).norm() / b_norm;
+            }
+            let duration_pruned_fast = start_pruned_fast.elapsed().unwrap();
+            prune_tree_times.push(duration_prune_tree.as_secs_f64());
+            pruned_tree_algo_times.push(duration_pruned_fast.as_secs_f64());
+            complete_pruned_tree_times.push(
+                duration_tree_gen.as_secs_f64()
+                    + duration_prune_tree.as_secs_f64()
+                    + duration_pruned_fast.as_secs_f64(),
+            );
+
+            let mut x = x_start.clone();
+            let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
+
+            let start_normal = SystemTime::now();
+            for i in 0..MAX_ITERATIONS {
+                if conv <= TOLERANCE {
+                    if i == MAX_ITERATIONS - 1 {
+                        dbg!("max!");
+                    }
+                    break;
+                }
+                for i in 0..size {
+                    let mut sigma = 0.0;
+                    for j in 0..size {
+                        if i != j {
+                            sigma += off_diag[(i, j)] * x[j];
+                        }
+                    }
+                    let diff = b[i] - sigma;
+                    x[i] = diff / diag[i];
+                }
+                conv = ((&matrix * &x) - &b).norm() / b_norm;
+            }
+            let duration_normal = start_normal.elapsed().unwrap();
+            normal_algo_times.push(duration_normal.as_secs_f64());
         }
-        conv = ((&matrix * &x) - &b).norm();
+
+        let tree_gen_mean = tree_gen_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+        let tree_algo_mean = tree_algo_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+        let complete_tree_algo_mean = complete_tree_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+        let prune_tree_mean = prune_tree_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+        let pruned_tree_algo_mean = pruned_tree_algo_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+        let complete_pruned_tree_mean =
+            complete_pruned_tree_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+        let normal_algo_mean = normal_algo_times.iter().sum::<f64>() / NUM_SAMPLES as f64;
+
+        let tree_gen_std = tree_gen_times
+            .iter()
+            .map(|&val| ((val - tree_gen_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+        let tree_algo_std = tree_algo_times
+            .iter()
+            .map(|&val| ((val - tree_algo_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+        let complete_tree_algo_std = complete_tree_times
+            .iter()
+            .map(|&val| ((val - complete_tree_algo_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+        let prune_tree_std = prune_tree_times
+            .iter()
+            .map(|&val| ((val - prune_tree_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+        let pruned_tree_algo_std = pruned_tree_algo_times
+            .iter()
+            .map(|&val| ((val - pruned_tree_algo_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+        let complete_pruned_tree_std = complete_pruned_tree_times
+            .iter()
+            .map(|&val| ((val - complete_pruned_tree_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+        let normal_algo_std = normal_algo_times
+            .iter()
+            .map(|&val| ((val - normal_algo_mean).powi(2)))
+            .sum::<f64>()
+            / NUM_SAMPLES as f64;
+
+        wtr.write_record(&[
+            pos.to_string(),
+            size.to_string(),
+            tree_gen_mean.to_string(),
+            tree_gen_std.to_string(),
+            tree_algo_mean.to_string(),
+            tree_algo_std.to_string(),
+            complete_tree_algo_mean.to_string(),
+            complete_tree_algo_std.to_string(),
+            prune_tree_mean.to_string(),
+            prune_tree_std.to_string(),
+            pruned_tree_algo_mean.to_string(),
+            pruned_tree_algo_std.to_string(),
+            complete_pruned_tree_mean.to_string(),
+            complete_pruned_tree_std.to_string(),
+            normal_algo_mean.to_string(),
+            normal_algo_std.to_string(),
+        ])
+        .unwrap();
+        wtr.flush().unwrap();
+        pos += 1;
     }
-    let duration_normal = start_normal.elapsed().unwrap();
-
-    let mut x = x_start.clone();
-    conv = ((&matrix * &x) - &b).norm();
-
-    let start_tree_gen = SystemTime::now();
-    let mut tree = RootedTreeVertex::get_partition_tree(&off_diag);
-    let duration_tree_gen = start_tree_gen.elapsed().unwrap();
-
-    let start_fast = SystemTime::now();
-    while conv > 10e-4 {
-        let sigma = tree.multiply_with_tree(&x);
-        let diff = &b - sigma;
-        for i in 0..size {
-            x[i] = diff[i] / diag[i];
-        }
-        conv = ((&matrix * &x) - &b).norm();
-    }
-    let duration_fast = start_fast.elapsed().unwrap();
-
-    println!("Normal time: {:?}", duration_normal);
-    println!("Tree gen time: {:?}", duration_tree_gen);
-    println!("Fast Jacobi alone time: {:?}", duration_fast);
-    println!(
-        "Fast Jacobi complete time: {:?}",
-        duration_tree_gen + duration_fast
-    );
+    wtr.flush().unwrap();
 }
