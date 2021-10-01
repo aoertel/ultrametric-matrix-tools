@@ -3,8 +3,7 @@ use nalgebra::{DMatrix, DVector};
 use petgraph::algo::astar;
 use petgraph::prelude::*;
 use petgraph::visit::GetAdjacencyMatrix;
-use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::prelude::*;
 use rayon::prelude::*;
 use std::sync::{Arc, Mutex};
 
@@ -95,9 +94,10 @@ fn generate_empty_graph(vertices: usize) -> StableUnGraph<(), ()> {
 
 fn generate_random_graph(vertices: usize, edge_prob: f64) -> StableUnGraph<(), ()> {
     let mut g = generate_empty_graph(vertices);
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     for from in 0..(vertices - 1) as u32 {
         for to in (from + 1)..vertices as u32 {
-            let random_value: f64 = rand::thread_rng().gen();
+            let random_value: f64 = rng.gen();
             if random_value <= edge_prob {
                 g.add_edge(from.into(), to.into(), ());
             }
@@ -132,7 +132,7 @@ fn generate_example_graph() -> StableUnGraph<(), ()> {
 
 #[allow(unused)]
 pub fn generate_random_connectivity_matrix(size: usize, edge_prob: f64) -> DMatrix<f64> {
-    let mut rng = rand::thread_rng();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     let g = generate_random_graph(size, edge_prob);
     let mut matrix = get_vertex_path_matrix(&g);
     for i in 0..size {
@@ -143,7 +143,7 @@ pub fn generate_random_connectivity_matrix(size: usize, edge_prob: f64) -> DMatr
 
 #[allow(unused)]
 pub fn random_vector(size: usize) -> DVector<f64> {
-    let mut rng = rand::thread_rng();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     let mut vector = DVector::<f64>::zeros(size);
     for i in 0..size {
         vector[i] = rng.gen_range(1..size) as f64;
@@ -180,7 +180,7 @@ pub fn to_graph6_string(g: &StableUnGraph<(), ()>) -> String {
 pub fn random_terrace_size_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     let mut matrix = DMatrix::<f64>::zeros(size, size);
     ultrametric_matrix_recursion(&mut matrix, 0, size - 1, 1.);
-    let mut rng = rand::thread_rng();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     for i in 0..size {
         matrix[(i, i)] = rng.gen_range(0..size) as f64;
     }
@@ -189,7 +189,7 @@ pub fn random_terrace_size_ultrametric_matrix(size: usize) -> DMatrix<f64> {
 
 fn ultrametric_matrix_recursion(matrix: &mut DMatrix<f64>, lower: usize, upper: usize, value: f64) {
     if upper >= lower + 1 {
-        let mut rng = rand::thread_rng();
+        let mut rng: StdRng = SeedableRng::seed_from_u64(42);
         let seperator = rng.gen_range(lower..upper) + 1;
         for i in lower..seperator {
             for j in seperator..(upper + 1) {
@@ -205,7 +205,7 @@ fn ultrametric_matrix_recursion(matrix: &mut DMatrix<f64>, lower: usize, upper: 
 #[allow(unused)]
 pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     let mut matrix = DMatrix::<f64>::zeros(size, size);
-    let mut rng = rand::thread_rng();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     for i in 1..size {
         let elem = rng.gen_range(1..size) as f64;
         matrix[(i - 1, i)] = elem;
@@ -229,7 +229,7 @@ pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
 
 #[allow(unused)]
 fn random_permutation(size: usize) -> DMatrix<f64> {
-    let mut rng = thread_rng();
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     let mut element_vector: Vec<usize> = (0..size).collect();
     element_vector.shuffle(&mut rng);
     let mut matrix = DMatrix::<f64>::zeros(size, size);

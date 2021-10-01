@@ -37,5 +37,9 @@ name = "performance"
 harness = false
 
 [[bench]]
+name = "performance_multiple"
+harness = false
+
+[[bench]]
 name = "jacobi_test"
 harness = false

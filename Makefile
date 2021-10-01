@@ -18,3 +18,6 @@ bench_jacobi:
 
 bench_test:
 	cargo criterion --bench multiplication_test
+
+bench_performance_multiple:
+	cargo criterion --bench performance_multiple

@@ -2,6 +2,7 @@ mod utils;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use nalgebra::DVector;
+use rand::prelude::*;
 use std::io;
 use std::time::SystemTime;
 use ultrametric_multiplication::RootedTreeVertex;
@@ -12,7 +13,7 @@ criterion_main!(benches);
 const MATRIX_SIZES: [usize; 8] = [10, 100, 250, 500, 1_000, 2_500, 5_000, 10_000];
 const NUM_SAMPLES: u32 = 1000;
 const MAX_ITERATIONS: u32 = 1000000;
-const TOLERANCE: f64 = 10e-6;
+const TOLERANCE: f64 = 10e-10;
 const HEADER_SINGLE: [&str; 16] = [
     "pos",
     "size",
@@ -33,6 +34,7 @@ const HEADER_SINGLE: [&str; 16] = [
 ];
 
 fn benchmark_jacobi(_c: &mut Criterion) {
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     let mut pos = 0;
     let mut wtr = csv::WriterBuilder::new()
         .delimiter(b',')
@@ -57,6 +59,7 @@ fn benchmark_jacobi(_c: &mut Criterion) {
                         diag_elem += matrix[(i, j)];
                     }
                 }
+                diag_elem = rng.gen_range(diag_elem..(diag_elem * diag_elem));
                 diag[i] = diag_elem;
                 matrix[(i, i)] = diag_elem;
                 off_diag[(i, i)] = 0.;
@@ -74,11 +77,8 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             let duration_tree_gen = start_tree_gen.elapsed().unwrap();
 
             let start_fast = SystemTime::now();
-            for i in 0..MAX_ITERATIONS {
+            for _ in 0..MAX_ITERATIONS {
                 if conv <= TOLERANCE {
-                    if i == MAX_ITERATIONS - 1 {
-                        dbg!("max!");
-                    }
                     break;
                 }
                 let sigma = off_diag_tree.multiply_with_tree(&x);
@@ -102,11 +102,8 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             let duration_prune_tree = start_prune_tree.elapsed().unwrap();
 
             let start_pruned_fast = SystemTime::now();
-            for i in 0..MAX_ITERATIONS {
+            for _ in 0..MAX_ITERATIONS {
                 if conv <= TOLERANCE {
-                    if i == MAX_ITERATIONS - 1 {
-                        dbg!("max!");
-                    }
                     break;
                 }
                 let sigma = off_diag_tree.multiply_with_tree(&x);
@@ -129,24 +126,16 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
 
             let start_normal = SystemTime::now();
-            for i in 0..MAX_ITERATIONS {
+            for _ in 0..MAX_ITERATIONS {
                 if conv <= TOLERANCE {
-                    if i == MAX_ITERATIONS - 1 {
-                        dbg!("max!");
-                    }
                     break;
                 }
+                let sigma = &off_diag * &x;
+                let diff = &b - sigma;
                 for i in 0..size {
-                    let mut sigma = 0.0;
-                    for j in 0..size {
-                        if i != j {
-                            sigma += off_diag[(i, j)] * x[j];
-                        }
-                    }
-                    let diff = b[i] - sigma;
-                    x[i] = diff / diag[i];
+                    x[i] = diff[i] / diag[i];
                 }
-                conv = ((&matrix * &x) - &b).norm() / b_norm;
+                conv = (&matrix * &x - &b).norm() / b_norm;
             }
             let duration_normal = start_normal.elapsed().unwrap();
             normal_algo_times.push(duration_normal.as_secs_f64());
