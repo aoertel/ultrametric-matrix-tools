@@ -23,9 +23,9 @@ fn benchmark(_c: &mut Criterion) {
     let pruned_matrix = root.reconstruct_matrix();
     if !pruned_matrix.eq(&matrix) {
         let mut root = RootedTreeVertex::get_partition_tree(&matrix);
-        root.print_rooted_tree();
+        root.print_tree();
         root.prune_tree();
-        root.print_rooted_tree();
+        root.print_tree();
         println!("{}", &matrix);
         println!("{}", &reconstructed_matrix);
         println!("{}", &pruned_matrix);
@@ -51,8 +51,6 @@ fn benchmark(_c: &mut Criterion) {
     //println!("Permuted matrix: {}", permutated_matrix);
     let permutated_vector = &perm_mat * &vector;
     //println!("Permuted vector: {}", permutated_vector);
-
-    //root.print_rooted_tree();
 
     let start_fast_perm = SystemTime::now();
     let mut root_perm = RootedTreeVertex::get_partition_tree(&permutated_matrix);

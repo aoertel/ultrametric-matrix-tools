@@ -18,11 +18,11 @@ pyo3 = "*"
 rand = "*"
 petgraph = "*"
 rayon = "*"
-csv = "*"
 
 [dev-dependencies]
 graph6 = "*"
 criterion = "*"
+csv = "*"
 
 [[bench]]
 name = "multiplication_test"

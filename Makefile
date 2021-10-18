@@ -1,11 +1,10 @@
+name?=multiplication
+
 build:
 	cargo build --release
 
 copy_python: build
-	cp target/release/libultrametric_multiplication.so ultrametric_multiplication.so
-
-test_python: copy_python
-	python3 test.py
+	cp target/release/libultrametric_multiplication.so examples/ultrametric_multiplication.so
 
 bench:
 	cargo criterion
@@ -21,3 +20,6 @@ bench_test:
 
 bench_performance_multiple:
 	cargo criterion --bench performance_multiple
+
+python_example: copy_python
+	python3 examples/$(name).py

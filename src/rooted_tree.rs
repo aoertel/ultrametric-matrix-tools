@@ -283,7 +283,7 @@ impl RootedTreeVertex {
         return py_matrix.into_pyarray(py);
     }
 
-    pub fn print_rooted_tree(&self) {
+    pub fn print_tree(&self) {
         let mut tree_root = TreeBuilder::new(format!(
             "{:?}, {:?}, {}",
             self.partition, self.partition_leaves, self.level
