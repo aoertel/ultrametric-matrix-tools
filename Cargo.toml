@@ -10,16 +10,16 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-nalgebra = "*"
-ptree = "*"
-numpy = "*"
-ndarray = "*"
-pyo3 = "*"
+nalgebra = "0.29.0"
+ptree = "0.3.2"
+numpy = "0.14.1"
+ndarray = "0.15.3"
+pyo3 = "0.14.5"
 
 [dev-dependencies]
-rand = "*"
-criterion = "*"
-csv = "*"
+rand = "0.8.4"
+criterion = "0.3.5"
+csv = "1.1.6"
 
 [[bench]]
 name = "single_multiplication"
