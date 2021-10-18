@@ -9,17 +9,14 @@ copy_python: build
 bench:
 	cargo criterion
 
-bench_performance:
-	cargo criterion --bench performance
+bench_single:
+	cargo criterion --bench single_multiplication
 
 bench_jacobi:
-	cargo criterion --bench jacobi_test
+	cargo criterion --bench jacobi_method
 
-bench_test:
-	cargo criterion --bench multiplication_test
-
-bench_performance_multiple:
-	cargo criterion --bench performance_multiple
+bench_multiple:
+	cargo criterion --bench multiple_multiplication
 
 python_example: copy_python
 	python3 examples/$(name).py

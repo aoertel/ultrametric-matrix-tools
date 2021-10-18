@@ -15,31 +15,20 @@ ptree = "*"
 numpy = "*"
 ndarray = "*"
 pyo3 = "*"
-rand = "*"
-petgraph = "*"
-rayon = "*"
 
 [dev-dependencies]
-graph6 = "*"
+rand = "*"
 criterion = "*"
 csv = "*"
 
 [[bench]]
-name = "multiplication_test"
+name = "single_multiplication"
 harness = false
 
 [[bench]]
-name = "property_check_test"
+name = "multiple_multiplication"
 harness = false
 
 [[bench]]
-name = "performance"
-harness = false
-
-[[bench]]
-name = "performance_multiple"
-harness = false
-
-[[bench]]
-name = "jacobi_test"
+name = "jacobi_method"
 harness = false

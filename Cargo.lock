@@ -275,15 +275,12 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "csv",
- "graph6",
  "nalgebra",
  "ndarray",
  "numpy",
- "petgraph",
  "ptree",
  "pyo3",
  "rand",
- "rayon",
 ]
 
 [[package]]
@@ -313,12 +310,6 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "graph6"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f7787a5d56ae68c11b444958a98a4a3619fb77e646d4eb6a022d2b9b89616f"
 
 [[package]]
 name = "half"
