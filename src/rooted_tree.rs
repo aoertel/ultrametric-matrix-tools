@@ -105,25 +105,6 @@ impl RootedTreeVertex {
         }
     }
 
-    pub fn prune_tree(&mut self) {
-        let mut new_children: Vec<Box<RootedTreeVertex>> = Vec::new();
-        let mut remove_ids: Vec<usize> = Vec::new();
-        for (id, child) in self.children.iter_mut().enumerate() {
-            child.prune_tree();
-            if child.level == self.level {
-                self.partition_leaves.extend(&child.partition_leaves);
-                new_children.append(&mut child.children);
-                remove_ids.push(id);
-            }
-        }
-        remove_ids.sort();
-        remove_ids.reverse();
-        for &id in remove_ids.iter() {
-            self.children.remove(id);
-        }
-        self.children.extend(new_children);
-    }
-
     pub fn reconstruct_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
@@ -281,6 +262,25 @@ impl RootedTreeVertex {
             }
         }
         return py_matrix.into_pyarray(py);
+    }
+
+    pub fn prune_tree(&mut self) {
+        let mut new_children: Vec<Box<RootedTreeVertex>> = Vec::new();
+        let mut remove_ids: Vec<usize> = Vec::new();
+        for (id, child) in self.children.iter_mut().enumerate() {
+            child.prune_tree();
+            if child.level == self.level {
+                self.partition_leaves.extend(&child.partition_leaves);
+                new_children.append(&mut child.children);
+                remove_ids.push(id);
+            }
+        }
+        remove_ids.sort();
+        remove_ids.reverse();
+        for &id in remove_ids.iter() {
+            self.children.remove(id);
+        }
+        self.children.extend(new_children);
     }
 
     pub fn print_tree(&self) {

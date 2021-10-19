@@ -9,10 +9,11 @@ fn main() {
             0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         ],
     );
-    let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
+
+    let mut b_k = DVector::from_element(4, 1.0);
     let mut tree = RootedTreeVertex::get_partition_tree(&matrix);
-    let fast_product = tree.multiply_with_tree(&vector);
-    println!("Product using our method: {}", fast_product);
-    let normal_product = matrix * vector;
-    println!("Product using normal multiplication: {}", normal_product);
+    for _ in 0..100 {
+        b_k = tree.multiply_with_tree(&b_k).normalize();
+    }
+    println!("{}", b_k);
 }
