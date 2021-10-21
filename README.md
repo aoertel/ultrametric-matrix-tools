@@ -14,8 +14,49 @@
 
 ## Quickstart
 ### Quickstart Rust
+Add the following to the ```Cargo.toml``` file:
+```toml
+[dependencies]
+# TODO: replace the * by the latest version.
+ultrametric_tree = "*"
+```
+An example of the construction of the ultrametric tree and multiplication with it is:
+```rust
+use nalgebra::{DMatrix, DVector};
+use ultrametric_tree::RootedTreeVertex;
+
+fn main() {
+    let matrix = DMatrix::from_vec(
+        4,
+        4,
+        vec![
+            0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        ],
+    );
+    let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
+    let mut tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let product = tree.multiply_with_tree(&vector);
+}
+
+```
 
 ### Quickstart Python
+You can install the current release by running:
+```console
+pip install ultrametric_tree
+```
+An example of the construction of the ultrametric tree and multiplication with it is:
+```python
+import ultrametric_tree.RootedTreeVertex as Tree
+import numpy as np
+
+matrix = np.array([[0.0, 1.0, 3.0, 1.0], [1.0, 3.0, 1.0, 1.0], [
+                  3.0, 1.0, 5.0, 1.0], [1.0, 1.0, 1.0, 1.0]])
+vector = np.array([4.0, 2.0, 7.0, 5.0])
+
+tree = Tree(matrix)
+product = tree.mult_with_tree(vector)
+```
 
 ## Build
 ### Build Rust Library
@@ -38,11 +79,19 @@ You can try out the Rust examples, you need to [install Cargo](https://www.rust-
 ```console
 cargo run --release --example [example_name]
 ```
+E.g. to run the multiplication example run:
+```console
+cargo run --release --example multiplication
+```
 
 ### Python Example
 To run the Python examples You can try out the Python examples located in ```./examples/``` by running the following command:
 ```console
 make python_example name=[example_name]
+```
+E.g. to run the multiplication example run:
+```console
+make python_example name=multiplication
 ```
 
 ## License
