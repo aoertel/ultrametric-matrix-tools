@@ -14,13 +14,13 @@ eps = 10e-12
 
 off_diag_tree = um.RootedTreeVertex(off_diag)
 full_tree = um.RootedTreeVertex(matrix)
-conv = np.linalg.norm(full_tree.mult_with_tree(x) - b) / np.linalg.norm(b)
+conv = np.linalg.norm(full_tree.mult(x) - b) / np.linalg.norm(b)
 for _ in range(100):
     if conv <= eps:
         break
-    sigma = off_diag_tree.mult_with_tree(x)
+    sigma = off_diag_tree.mult(x)
     diff = b - sigma
     for i in range(4):
         x[i] = diff[i] / diag[i]
-    conv = np.linalg.norm(full_tree.mult_with_tree(x) - b) / np.linalg.norm(b)
+    conv = np.linalg.norm(full_tree.mult(x) - b) / np.linalg.norm(b)
 print("Solution x to the equation system Ax=b:", x)

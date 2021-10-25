@@ -1,18 +1,28 @@
 use nalgebra::{DMatrix, DVector};
-use ndarray::Array2;
+use ndarray::prelude::*;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArrayDyn};
 use ptree::builder::TreeBuilder;
 use ptree::output::print_tree;
 use pyo3::prelude::*;
+use std::ops;
 
 #[pyclass]
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct RootedTreeVertex {
     partition: Vec<usize>,
     partition_leaves: Vec<usize>,
     level: f64,
     sum: f64,
     children: Vec<Box<RootedTreeVertex>>,
+}
+
+impl<'a, 'b> ops::Mul<&'b DVector<f64>> for &'a RootedTreeVertex {
+    type Output = DVector<f64>;
+
+    fn mul(self, vector: &'b DVector<f64>) -> DVector<f64> {
+        let mut tree = self.clone();
+        tree.multiply(vector)
+    }
 }
 
 impl RootedTreeVertex {
@@ -141,7 +151,7 @@ impl RootedTreeVertex {
         }
     }
 
-    pub fn multiply_with_tree(&mut self, vector: &DVector<f64>) -> DVector<f64> {
+    pub fn multiply(&mut self, vector: &DVector<f64>) -> DVector<f64> {
         self.calculate_sums(vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
         self.calculate_full_product(&mut product, 0.0);
@@ -211,7 +221,7 @@ impl RootedTreeVertex {
 #[pymethods]
 impl RootedTreeVertex {
     #[new]
-    pub fn get_part_tree(py_matrix: PyReadonlyArrayDyn<f64>) -> Self {
+    pub fn python_new(py_matrix: PyReadonlyArrayDyn<f64>) -> Self {
         let size = py_matrix.shape()[0];
         let py_array = py_matrix.as_array();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
@@ -227,7 +237,7 @@ impl RootedTreeVertex {
         return root;
     }
 
-    pub fn mult_with_tree<'py>(
+    pub fn mult<'py>(
         &mut self,
         py: Python<'py>,
         py_vector: PyReadonlyArrayDyn<f64>,

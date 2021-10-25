@@ -19,19 +19,19 @@ fn main() {
     let mut x = DVector::zeros(4);
     let eps = 10e-12;
 
-    let mut off_diag_tree = RootedTreeVertex::get_partition_tree(&off_diag);
-    let mut full_tree = RootedTreeVertex::get_partition_tree(&matrix);
-    let mut conv = (full_tree.multiply_with_tree(&x) - &b).norm() / b.norm();
+    let off_diag_tree = RootedTreeVertex::get_partition_tree(&off_diag);
+    let full_tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let mut conv = (&full_tree * &x - &b).norm() / b.norm();
     for _ in 0..100 {
         if conv <= eps {
             break;
         }
-        let sigma = off_diag_tree.multiply_with_tree(&x);
+        let sigma = &off_diag_tree * &x;
         let diff = &b - sigma;
         for i in 0..4 {
             x[i] = diff[i] / diag[i];
         }
-        conv = (full_tree.multiply_with_tree(&x) - &b).norm() / b.norm();
+        conv = (&full_tree * &x - &b).norm() / b.norm();
     }
     println!("Solution x to the equation system Ax=b: {}", x);
 }

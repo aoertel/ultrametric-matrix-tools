@@ -10,8 +10,8 @@ fn main() {
         ],
     );
     let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
-    let mut tree = RootedTreeVertex::get_partition_tree(&matrix);
-    let fast_product = tree.multiply_with_tree(&vector);
+    let tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let fast_product = &tree * &vector;
     println!("Product using our method: {}", fast_product);
     let normal_product = matrix * vector;
     println!("Product using normal multiplication: {}", normal_product);
