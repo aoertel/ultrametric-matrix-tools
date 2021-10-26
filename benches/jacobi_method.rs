@@ -5,7 +5,7 @@ use nalgebra::DVector;
 use rand::prelude::*;
 use std::io;
 use std::time::SystemTime;
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 criterion_group!(benches, benchmark_jacobi);
 criterion_main!(benches);
@@ -72,8 +72,8 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
 
             let start_tree_gen = SystemTime::now();
-            let mut off_diag_tree = RootedTreeVertex::get_partition_tree(&off_diag);
-            let mut full_tree = RootedTreeVertex::get_partition_tree(&matrix);
+            let mut off_diag_tree = UltrametricTree::from_matrix(&off_diag);
+            let mut full_tree = UltrametricTree::from_matrix(&matrix);
             let duration_tree_gen = start_tree_gen.elapsed().unwrap();
 
             let start_fast = SystemTime::now();

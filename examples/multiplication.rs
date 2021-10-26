@@ -1,5 +1,5 @@
 use nalgebra::{DMatrix, DVector};
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -10,9 +10,9 @@ fn main() {
         ],
     );
     let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
-    let tree = RootedTreeVertex::get_partition_tree(&matrix);
-    let fast_product = &tree * &vector;
+    let tree = UltrametricTree::from_matrix(&matrix);
+    let fast_product = tree * &vector;
     println!("Product using our method: {}", fast_product);
-    let normal_product = matrix * vector;
+    let normal_product = matrix * &vector;
     println!("Product using normal multiplication: {}", normal_product);
 }

@@ -1,5 +1,5 @@
 use nalgebra::DMatrix;
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -9,6 +9,6 @@ fn main() {
             0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0,
         ],
     );
-    let tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let tree = UltrametricTree::from_matrix(&matrix);
     tree.print_tree();
 }

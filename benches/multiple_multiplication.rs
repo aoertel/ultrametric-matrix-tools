@@ -4,7 +4,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use nalgebra::{DMatrix, DVector};
 use std::io;
 use std::time::SystemTime;
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 criterion_group!(benches, benchmark_multiple);
 criterion_main!(benches);
@@ -52,7 +52,7 @@ fn benchmark_multiple(_c: &mut Criterion) {
             let vector = utils::random_vector(size);
 
             let start_tree_gen = SystemTime::now();
-            let mut root = RootedTreeVertex::get_partition_tree(&matrix);
+            let mut root = UltrametricTree::from_matrix(&matrix);
             let duration_tree_gen = start_tree_gen.elapsed().unwrap();
             let start_tree_mult = SystemTime::now();
             for _ in 0..NUM_ITERATIONS {

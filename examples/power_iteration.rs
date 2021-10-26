@@ -1,5 +1,5 @@
 use nalgebra::{DMatrix, DVector};
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -11,7 +11,7 @@ fn main() {
     );
 
     let mut b_k = DVector::from_element(4, 1.0);
-    let tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let tree = UltrametricTree::from_matrix(&matrix);
     for _ in 0..100 {
         b_k = (&tree * &b_k).normalize();
     }

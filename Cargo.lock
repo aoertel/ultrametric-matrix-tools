@@ -259,20 +259,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
-name = "fast-matrix-vector-multiplication"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "csv",
- "nalgebra",
- "ndarray",
- "numpy",
- "ptree",
- "pyo3",
- "rand",
-]
-
-[[package]]
 name = "fixedbitset"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1112,6 +1098,20 @@ name = "typenum"
 version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b63708a265f51345575b27fe43f9500ad611579e764c79edbc2037b1121959ec"
+
+[[package]]
+name = "ultrametric_tree"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "csv",
+ "nalgebra",
+ "ndarray",
+ "numpy",
+ "ptree",
+ "pyo3",
+ "rand",
+]
 
 [[package]]
 name = "unicode-width"

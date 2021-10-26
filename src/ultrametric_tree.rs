@@ -8,15 +8,15 @@ use std::ops;
 
 #[pyclass]
 #[derive(Default, Clone)]
-pub struct RootedTreeVertex {
+pub struct UltrametricTree {
     partition: Vec<usize>,
     partition_leaves: Vec<usize>,
     level: f64,
     sum: f64,
-    children: Vec<Box<RootedTreeVertex>>,
+    children: Vec<Box<UltrametricTree>>,
 }
 
-impl<'a, 'b> ops::Mul<&'b DVector<f64>> for &'a RootedTreeVertex {
+impl<'b> ops::Mul<&'b DVector<f64>> for UltrametricTree {
     type Output = DVector<f64>;
 
     fn mul(self, vector: &'b DVector<f64>) -> DVector<f64> {
@@ -25,22 +25,49 @@ impl<'a, 'b> ops::Mul<&'b DVector<f64>> for &'a RootedTreeVertex {
     }
 }
 
-impl RootedTreeVertex {
+impl<'a, 'b> ops::Mul<&'b DVector<f64>> for &'a UltrametricTree {
+    type Output = DVector<f64>;
+
+    fn mul(self, vector: &'b DVector<f64>) -> DVector<f64> {
+        let mut tree = self.clone();
+        tree.multiply(vector)
+    }
+}
+
+impl ops::Mul<DVector<f64>> for UltrametricTree {
+    type Output = DVector<f64>;
+
+    fn mul(self, vector: DVector<f64>) -> DVector<f64> {
+        let mut tree = self.clone();
+        tree.multiply(&vector)
+    }
+}
+
+impl<'a> ops::Mul<DVector<f64>> for &'a UltrametricTree {
+    type Output = DVector<f64>;
+
+    fn mul(self, vector: DVector<f64>) -> DVector<f64> {
+        let mut tree = self.clone();
+        tree.multiply(&vector)
+    }
+}
+
+impl UltrametricTree {
     fn new(partition: Vec<usize>) -> Self {
-        RootedTreeVertex {
+        UltrametricTree {
             partition: partition,
             ..Default::default()
         }
     }
 
-    pub fn get_partition_tree(matrix: &DMatrix<f64>) -> Self {
+    pub fn from_matrix(matrix: &DMatrix<f64>) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
-        let mut root = RootedTreeVertex::new(vertex_ids);
-        root.partition_tree_vertex(&matrix);
+        let mut root = UltrametricTree::new(vertex_ids);
+        root.from_matrix_recursive(&matrix);
         return root;
     }
 
-    fn partition_tree_vertex(&mut self, matrix: &DMatrix<f64>) {
+    fn from_matrix_recursive(&mut self, matrix: &DMatrix<f64>) {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
@@ -64,24 +91,24 @@ impl RootedTreeVertex {
                 }
             }
             self.level = min;
-            let left_child = Box::new(RootedTreeVertex::new(left_partition));
-            let right_child = Box::new(RootedTreeVertex::new(right_partition));
+            let left_child = Box::new(UltrametricTree::new(left_partition));
+            let right_child = Box::new(UltrametricTree::new(right_partition));
             self.children.push(left_child);
             self.children.push(right_child);
 
-            self.children[0].as_mut().partition_tree_vertex(matrix);
-            self.children[1].as_mut().partition_tree_vertex(matrix);
+            self.children[0].as_mut().from_matrix_recursive(matrix);
+            self.children[1].as_mut().from_matrix_recursive(matrix);
         }
     }
 
-    pub fn get_approximate_partition_tree(matrix: &DMatrix<f64>, eps: f64) -> Self {
+    pub fn from_matrix_approx(matrix: &DMatrix<f64>, eps: f64) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
-        let mut root = RootedTreeVertex::new(vertex_ids);
-        root.approximate_partition_tree_vertex(&matrix, eps);
+        let mut root = UltrametricTree::new(vertex_ids);
+        root.from_matrix_approx_recursive(&matrix, eps);
         return root;
     }
 
-    fn approximate_partition_tree_vertex(&mut self, matrix: &DMatrix<f64>, eps: f64) {
+    fn from_matrix_approx_recursive(&mut self, matrix: &DMatrix<f64>, eps: f64) {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
             self.level = matrix[(first_i, first_i)];
@@ -105,24 +132,28 @@ impl RootedTreeVertex {
             }
 
             self.level = min;
-            let left_child = Box::new(RootedTreeVertex::new(left_partition));
-            let right_child = Box::new(RootedTreeVertex::new(right_partition));
+            let left_child = Box::new(UltrametricTree::new(left_partition));
+            let right_child = Box::new(UltrametricTree::new(right_partition));
             self.children.push(left_child);
             self.children.push(right_child);
 
-            self.children[0].as_mut().partition_tree_vertex(matrix);
-            self.children[1].as_mut().partition_tree_vertex(matrix);
+            self.children[0]
+                .as_mut()
+                .from_matrix_approx_recursive(matrix, eps);
+            self.children[1]
+                .as_mut()
+                .from_matrix_approx_recursive(matrix, eps);
         }
     }
 
-    pub fn reconstruct_matrix(&self) -> DMatrix<f64> {
+    pub fn to_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
-        self.reconstruct_matrix_recursive(&mut matrix);
+        self.to_matrix_recursive(&mut matrix);
         return matrix;
     }
 
-    fn reconstruct_matrix_recursive(&self, matrix: &mut DMatrix<f64>) {
+    fn to_matrix_recursive(&self, matrix: &mut DMatrix<f64>) {
         for &i in self.partition_leaves.iter() {
             matrix[(i, i)] = self.level;
         }
@@ -139,7 +170,7 @@ impl RootedTreeVertex {
                     matrix[(i1, i)] = self.level;
                 }
             }
-            self.children[child_id1].reconstruct_matrix_recursive(matrix);
+            self.children[child_id1].to_matrix_recursive(matrix);
         }
         for leaf_id1 in 0..self.partition_leaves.len() {
             for leaf_id2 in (leaf_id1 + 1)..self.partition_leaves.len() {
@@ -152,19 +183,19 @@ impl RootedTreeVertex {
     }
 
     pub fn multiply(&mut self, vector: &DVector<f64>) -> DVector<f64> {
-        self.calculate_sums(vector, 0.0);
+        self.calculate_partial_product(vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
         self.calculate_full_product(&mut product, 0.0);
         return product;
     }
 
-    fn calculate_sums(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
+    fn calculate_partial_product(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
         let mut sum = 0.;
         for &leaf_idx in self.partition_leaves.iter() {
             sum += vector[leaf_idx];
         }
         for child in self.children.iter_mut() {
-            sum += child.calculate_sums(vector, self.level);
+            sum += child.calculate_partial_product(vector, self.level);
         }
         self.sum = (self.level - parent_val) * sum;
         return sum;
@@ -182,7 +213,7 @@ impl RootedTreeVertex {
 
     pub fn get_permutation_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
-        let permutations = self.get_permutations();
+        let permutations = self.get_permutation_matrix_recursive();
         let mut perm_mat = DMatrix::<f64>::zeros(size, size);
         for (i, &j) in permutations.iter().enumerate() {
             perm_mat[(i, j)] = 1.;
@@ -190,16 +221,16 @@ impl RootedTreeVertex {
         return perm_mat;
     }
 
-    fn get_permutations(&self) -> Vec<usize> {
+    fn get_permutation_matrix_recursive(&self) -> Vec<usize> {
         let mut perm: Vec<usize> = Vec::new();
         for child in self.children.iter() {
-            perm.extend(child.get_permutations());
+            perm.extend(child.get_permutation_matrix_recursive());
         }
         perm.extend(self.partition_leaves.clone());
         return perm;
     }
 
-    fn construct_tree(&self, output_tree: &mut TreeBuilder) {
+    fn print_tree_recursive(&self, output_tree: &mut TreeBuilder) {
         if self.children.is_empty() {
             output_tree.add_empty_child(format!(
                 "{:?}, {:?}, {}",
@@ -211,7 +242,7 @@ impl RootedTreeVertex {
                 self.partition, self.partition_leaves, self.level
             ));
             for child in self.children.iter() {
-                child.construct_tree(output_tree);
+                child.print_tree_recursive(output_tree);
             }
             output_tree.end_child();
         }
@@ -219,9 +250,9 @@ impl RootedTreeVertex {
 }
 
 #[pymethods]
-impl RootedTreeVertex {
+impl UltrametricTree {
     #[new]
-    pub fn python_new(py_matrix: PyReadonlyArrayDyn<f64>) -> Self {
+    pub fn new_py(py_matrix: PyReadonlyArrayDyn<f64>) -> Self {
         let size = py_matrix.shape()[0];
         let py_array = py_matrix.as_array();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
@@ -232,8 +263,8 @@ impl RootedTreeVertex {
         }
 
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
-        let mut root = RootedTreeVertex::new(vertex_ids);
-        root.partition_tree_vertex(&matrix);
+        let mut root = UltrametricTree::new(vertex_ids);
+        root.from_matrix_recursive(&matrix);
         return root;
     }
 
@@ -249,7 +280,7 @@ impl RootedTreeVertex {
             vector[i] = py_array[[i]];
         }
 
-        self.calculate_sums(&vector, 0.0);
+        self.calculate_partial_product(&vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
         self.calculate_full_product(&mut product, 0.0);
 
@@ -257,9 +288,10 @@ impl RootedTreeVertex {
         return py_product;
     }
 
-    pub fn get_perm_matrix<'py>(&self, py: Python<'py>) -> &'py PyArray2<f64> {
+    #[pyo3(name = "get_permutation_matrix")]
+    pub fn get_permutation_matrix_py<'py>(&self, py: Python<'py>) -> &'py PyArray2<f64> {
         let size = self.partition.len();
-        let permutations = self.get_permutations();
+        let permutations = self.get_permutation_matrix_recursive();
         let mut perm_mat = DMatrix::<f64>::zeros(size, size);
         for (i, &j) in permutations.iter().enumerate() {
             perm_mat[(i, j)] = 1.;
@@ -275,7 +307,7 @@ impl RootedTreeVertex {
     }
 
     pub fn prune_tree(&mut self) {
-        let mut new_children: Vec<Box<RootedTreeVertex>> = Vec::new();
+        let mut new_children: Vec<Box<UltrametricTree>> = Vec::new();
         let mut remove_ids: Vec<usize> = Vec::new();
         for (id, child) in self.children.iter_mut().enumerate() {
             child.prune_tree();
@@ -299,7 +331,7 @@ impl RootedTreeVertex {
             self.partition, self.partition_leaves, self.level
         ));
         for child in self.children.iter() {
-            child.construct_tree(&mut tree_root);
+            child.print_tree_recursive(&mut tree_root);
         }
         let tree = tree_root.build();
         print_tree(&tree).ok();

@@ -1,4 +1,4 @@
-import ultrametric_multiplication as um
+from ultrametric_tree import UltrametricTree
 import numpy as np
 
 matrix = np.array([[7.0, 1.0, 3.0, 1.0], [1.0, 5.0, 1.0, 1.0], [
@@ -12,8 +12,8 @@ b = np.array([3.0, 2.0, 6.0, 7.0])
 x = np.zeros(4)
 eps = 10e-12
 
-off_diag_tree = um.RootedTreeVertex(off_diag)
-full_tree = um.RootedTreeVertex(matrix)
+off_diag_tree = UltrametricTree(off_diag)
+full_tree = UltrametricTree(matrix)
 conv = np.linalg.norm(full_tree.mult(x) - b) / np.linalg.norm(b)
 for _ in range(100):
     if conv <= eps:

@@ -23,7 +23,7 @@ ultrametric_tree = "*"
 An example of the construction of the ultrametric tree and multiplication with it is:
 ```rust
 use nalgebra::{DMatrix, DVector};
-use ultrametric_tree::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -34,8 +34,8 @@ fn main() {
         ],
     );
     let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
-    let mut tree = RootedTreeVertex::get_partition_tree(&matrix);
-    let product = tree.multiply_with_tree(&vector);
+    let tree = UltrametricTree::from_matrix(&matrix);
+    let product = tree * vector;
 }
 
 ```
@@ -47,15 +47,15 @@ pip install ultrametric_tree
 ```
 An example of the construction of the ultrametric tree and multiplication with it is:
 ```python
-import ultrametric_tree.RootedTreeVertex as Tree
+from ultrametric_tree import UltrametricTree
 import numpy as np
 
 matrix = np.array([[0.0, 1.0, 3.0, 1.0], [1.0, 3.0, 1.0, 1.0], [
                   3.0, 1.0, 5.0, 1.0], [1.0, 1.0, 1.0, 1.0]])
 vector = np.array([4.0, 2.0, 7.0, 5.0])
 
-tree = Tree(matrix)
-product = tree.mult_with_tree(vector)
+tree = UltrametricTree(matrix)
+product = tree.mult(vector)
 ```
 
 ## Build

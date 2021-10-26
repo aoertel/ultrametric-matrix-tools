@@ -1,5 +1,5 @@
 use nalgebra::{DMatrix, DVector};
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -10,10 +10,10 @@ fn main() {
         ],
     );
     let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
-    let mut tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let mut tree = UltrametricTree::from_matrix(&matrix);
     let product = tree.multiply(&vector);
     println!("Product: {}", product);
     tree.prune_tree();
-    let pruned_tree_product = &tree * &vector;
+    let pruned_tree_product = tree * &vector;
     println!("Product with pruned tree: {}", pruned_tree_product);
 }

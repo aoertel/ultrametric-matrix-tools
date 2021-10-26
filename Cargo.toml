@@ -1,11 +1,11 @@
 [package]
-name = "fast-matrix-vector-multiplication"
+name = "ultrametric_tree"
 version = "0.1.0"
 authors = ["Andy Oertel <andy.oertel@informatik.tu-chemnitz.de>"]
 edition = "2018"
 
 [lib]
-name = "ultrametric_multiplication"
+name = "ultrametric_tree"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 

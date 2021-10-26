@@ -1,5 +1,5 @@
 use nalgebra::{DMatrix, DVector};
-use ultrametric_multiplication::RootedTreeVertex;
+use ultrametric_tree::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -19,8 +19,8 @@ fn main() {
     let mut x = DVector::zeros(4);
     let eps = 10e-12;
 
-    let off_diag_tree = RootedTreeVertex::get_partition_tree(&off_diag);
-    let full_tree = RootedTreeVertex::get_partition_tree(&matrix);
+    let off_diag_tree = UltrametricTree::from_matrix(&off_diag);
+    let full_tree = UltrametricTree::from_matrix(&matrix);
     let mut conv = (&full_tree * &x - &b).norm() / b.norm();
     for _ in 0..100 {
         if conv <= eps {
