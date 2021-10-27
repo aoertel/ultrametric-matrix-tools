@@ -1,3 +1,5 @@
+//! `UltrametricTree` implementation.
+
 use nalgebra::{DMatrix, DVector};
 use ndarray::prelude::*;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArrayDyn};
@@ -6,53 +8,66 @@ use ptree::output::print_tree;
 use pyo3::prelude::*;
 use std::ops;
 
+/// Tree that represents the structure of an ultrametric matrix.
+///
+/// Actually, ```UltrametricTree``` only represents one vertex of the tree. However, a vertex and its ```children``` represent the structure of an ultrametric tree. To reconstruct the original ultrametric matrix, the root vertex of the tree has to be stored.
 #[pyclass]
 #[derive(Default, Clone)]
 pub struct UltrametricTree {
+    /// Vector storing indices associated with the vertex
     partition: Vec<usize>,
+    /// Vector storing indices, where the vertex is a leaf
     partition_leaves: Vec<usize>,
+    /// Value of the vertex
     level: f64,
+    /// Value of partial product used for multiplication
     sum: f64,
+    /// Children vertices of the vertex
     children: Vec<Box<UltrametricTree>>,
 }
 
+/// Implementation of multiplication operator for `tree * &vector`.
 impl<'b> ops::Mul<&'b DVector<f64>> for UltrametricTree {
     type Output = DVector<f64>;
 
     fn mul(self, vector: &'b DVector<f64>) -> DVector<f64> {
         let mut tree = self.clone();
-        tree.multiply(vector)
+        tree.mult(vector)
     }
 }
 
+/// Implementation of multiplication operator for `&tree * &vector`.
 impl<'a, 'b> ops::Mul<&'b DVector<f64>> for &'a UltrametricTree {
     type Output = DVector<f64>;
 
     fn mul(self, vector: &'b DVector<f64>) -> DVector<f64> {
         let mut tree = self.clone();
-        tree.multiply(vector)
+        tree.mult(vector)
     }
 }
 
+/// Implementation of multiplication operator for `tree * vector`.
 impl ops::Mul<DVector<f64>> for UltrametricTree {
     type Output = DVector<f64>;
 
     fn mul(self, vector: DVector<f64>) -> DVector<f64> {
         let mut tree = self.clone();
-        tree.multiply(&vector)
+        tree.mult(&vector)
     }
 }
 
+/// Implementation of multiplication operator for `&tree * vector`.
 impl<'a> ops::Mul<DVector<f64>> for &'a UltrametricTree {
     type Output = DVector<f64>;
 
     fn mul(self, vector: DVector<f64>) -> DVector<f64> {
         let mut tree = self.clone();
-        tree.multiply(&vector)
+        tree.mult(&vector)
     }
 }
 
 impl UltrametricTree {
+    /// Create a new vertex using `partition`.
     fn new(partition: Vec<usize>) -> Self {
         UltrametricTree {
             partition: partition,
@@ -60,6 +75,17 @@ impl UltrametricTree {
         }
     }
 
+    /// Construct a `UltrametricTree` from an ultrametric matrix that represents the structure of the matrix.
+    ///
+    /// This function does not check if the matrix is ultrametric. The value retured by this function is the root of the tree that represents the ultrametric matrix ```matrix```. Thus, the function returns the tree that represents ```matrix```.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let tree = UltrametricTree::from_matrix(&matrix);
+    /// ```
     pub fn from_matrix(matrix: &DMatrix<f64>) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
         let mut root = UltrametricTree::new(vertex_ids);
@@ -67,6 +93,7 @@ impl UltrametricTree {
         return root;
     }
 
+    /// Recursive function used to construct the tree from an ultrametric matrix.
     fn from_matrix_recursive(&mut self, matrix: &DMatrix<f64>) {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
@@ -101,6 +128,17 @@ impl UltrametricTree {
         }
     }
 
+    /// Construct a `UltrametricTree` from an ultrametric matrix that approximately represents the structure of the matrix.
+    ///
+    /// This function is similar to [`from_matrix`](UltrametricTree::from_matrix). The difference is that the elements associated with the indices in the right_partition are at most `min + eps` instead of equal to `min`. Only the minimal value is stored in the vertex.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.1, 3.0, 1.0, 1.1, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let tree = UltrametricTree::from_matrix_approx(&matrix, 0.1);
+    /// ```
     pub fn from_matrix_approx(matrix: &DMatrix<f64>, eps: f64) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
         let mut root = UltrametricTree::new(vertex_ids);
@@ -108,6 +146,7 @@ impl UltrametricTree {
         return root;
     }
 
+    /// Recursive function used to construct the tree that approximately represents the structure of an ultrametric matrix.
     fn from_matrix_approx_recursive(&mut self, matrix: &DMatrix<f64>, eps: f64) {
         let first_i = self.partition[0];
         if self.partition.len() == 1 {
@@ -146,6 +185,7 @@ impl UltrametricTree {
         }
     }
 
+    /// Construct the ultrametric matrix that is represented by the `UltrametricTree`.
     pub fn to_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
@@ -153,6 +193,7 @@ impl UltrametricTree {
         return matrix;
     }
 
+    /// Recursive function to construct the ultrametric matrix that is represented by the `UltrametricTree`.
     fn to_matrix_recursive(&self, matrix: &mut DMatrix<f64>) {
         for &i in self.partition_leaves.iter() {
             matrix[(i, i)] = self.level;
@@ -182,13 +223,29 @@ impl UltrametricTree {
         }
     }
 
-    pub fn multiply(&mut self, vector: &DVector<f64>) -> DVector<f64> {
+    /// Calculate the product of an ultrametric matrix represented by an `UltrametricTree` and a vector.
+    ///
+    /// The multiplication is done in two steps. The first step is to annotate the `UltrametricTree` with the partial product. The second step sums the partial products to the full product for each element of the product vector.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let vector = nalgebra::DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
+    /// let tree = UltrametricTree::from_matrix(&matrix);
+    /// let product = tree.multiply(&vector);
+    ///
+    /// assert_eq!(product, nalgebra::DVector::from_vec(vec![28.0, 22.0, 54.0, 18.0]));
+    /// ```
+    pub fn mult(&mut self, vector: &DVector<f64>) -> DVector<f64> {
         self.calculate_partial_product(vector, 0.0);
         let mut product: DVector<f64> = DVector::<f64>::zeros(vector.nrows());
         self.calculate_full_product(&mut product, 0.0);
         return product;
     }
 
+    /// Recursive function to calculate the partial product, which is the first step to calculate the product in [`multiply`](UltrametricTree::multiply).
     fn calculate_partial_product(&mut self, vector: &DVector<f64>, parent_val: f64) -> f64 {
         let mut sum = 0.;
         for &leaf_idx in self.partition_leaves.iter() {
@@ -201,6 +258,7 @@ impl UltrametricTree {
         return sum;
     }
 
+    /// Recursive function to calculate the full product, which is the second step to calculate the product in [`multiply`](UltrametricTree::multiply).
     fn calculate_full_product(&self, product: &mut DVector<f64>, prev_sum: f64) {
         let sum = prev_sum + self.sum;
         for &leaf_id in self.partition_leaves.iter() {
@@ -211,6 +269,9 @@ impl UltrametricTree {
         }
     }
 
+    /// Construct the permutation matrix of the `UltrametricTree`.
+    ///
+    /// The permutation matrix is implicitly used to partition the matrix for the construction of the `UltrametrixTree` via [`from_matrix`](UltrametricTree::from_matrix).
     pub fn get_permutation_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
         let permutations = self.get_permutation_matrix_recursive();
@@ -221,6 +282,7 @@ impl UltrametricTree {
         return perm_mat;
     }
 
+    /// Recursive function to construct the permutation matrix.
     fn get_permutation_matrix_recursive(&self) -> Vec<usize> {
         let mut perm: Vec<usize> = Vec::new();
         for child in self.children.iter() {
@@ -230,6 +292,7 @@ impl UltrametricTree {
         return perm;
     }
 
+    /// Recursive function to display the `UltrametricTree`.
     fn print_tree_recursive(&self, output_tree: &mut TreeBuilder) {
         if self.children.is_empty() {
             output_tree.add_empty_child(format!(
@@ -251,8 +314,9 @@ impl UltrametricTree {
 
 #[pymethods]
 impl UltrametricTree {
+    /// Python wrapper for [`from_matrix`](UltrametricTree::from_matrix).
     #[new]
-    pub fn new_py(py_matrix: PyReadonlyArrayDyn<f64>) -> Self {
+    pub fn from_matrix_py(py_matrix: PyReadonlyArrayDyn<f64>) -> Self {
         let size = py_matrix.shape()[0];
         let py_array = py_matrix.as_array();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
@@ -268,7 +332,9 @@ impl UltrametricTree {
         return root;
     }
 
-    pub fn mult<'py>(
+    /// Python wrapper for [`mult`](UltrametricTree::mult).
+    #[pyo3(name = "mult")]
+    pub fn mult_py<'py>(
         &mut self,
         py: Python<'py>,
         py_vector: PyReadonlyArrayDyn<f64>,
@@ -288,6 +354,7 @@ impl UltrametricTree {
         return py_product;
     }
 
+    /// Python wrapper for [`get_permutation_matrix`](UltrametricTree::get_permutation_matrix).
     #[pyo3(name = "get_permutation_matrix")]
     pub fn get_permutation_matrix_py<'py>(&self, py: Python<'py>) -> &'py PyArray2<f64> {
         let size = self.partition.len();
@@ -306,6 +373,9 @@ impl UltrametricTree {
         return py_matrix.into_pyarray(py);
     }
 
+    /// Prune the `UltrametricTree` to reduce the number of vertices in the tree.
+    ///
+    /// The pruned tree represents the same structure of the same ultrametric matrix as the tree before. Thus, the pruned tree and the original tree are semantically equivalent, but the pruned tree contains less vertices to increase performance.
     pub fn prune_tree(&mut self) {
         let mut new_children: Vec<Box<UltrametricTree>> = Vec::new();
         let mut remove_ids: Vec<usize> = Vec::new();
@@ -325,6 +395,28 @@ impl UltrametricTree {
         self.children.extend(new_children);
     }
 
+    /// Displays the `UltrametricTree`.
+    ///
+    /// The structure of the `UltrametricTree` is printed to the terminal. This includes the current vertex and all the children of this vertex. Each vertex of the printed tree is annotated with `partition`, `partition_leaves` and `level`.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let tree = UltrametricTree::from_matrix_approx(&matrix);
+    /// tree.print_tree();
+    /// ```
+    /// This prints the folowing tree:
+    /// ```console
+    /// [0, 1, 2, 3], [], 1
+    /// ├─ [0, 2], [], 3
+    /// │  ├─ [0], [0], 0
+    /// │  └─ [2], [2], 5
+    /// └─ [1, 3], [], 1
+    ///    ├─ [1], [1], 3
+    ///    └─ [3], [3], 1
+    /// ```
     pub fn print_tree(&self) {
         let mut tree_root = TreeBuilder::new(format!(
             "{:?}, {:?}, {}",

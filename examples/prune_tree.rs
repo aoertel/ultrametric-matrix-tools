@@ -11,9 +11,9 @@ fn main() {
     );
     let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
     let mut tree = UltrametricTree::from_matrix(&matrix);
-    let product = tree.multiply(&vector);
+    let product = &tree * &vector;
     println!("Product: {}", product);
     tree.prune_tree();
-    let pruned_tree_product = tree * &vector;
+    let pruned_tree_product = &tree * &vector;
     println!("Product with pruned tree: {}", pruned_tree_product);
 }

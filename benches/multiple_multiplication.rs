@@ -56,7 +56,7 @@ fn benchmark_multiple(_c: &mut Criterion) {
             let duration_tree_gen = start_tree_gen.elapsed().unwrap();
             let start_tree_mult = SystemTime::now();
             for _ in 0..NUM_ITERATIONS {
-                root.multiply(&vector);
+                root.mult(&vector);
             }
             let duration_tree_mult = start_tree_mult.elapsed().unwrap();
             tree_gen_times.push(duration_tree_gen.as_secs_f64());
@@ -69,7 +69,7 @@ fn benchmark_multiple(_c: &mut Criterion) {
             let duration_prune_tree = start_prune_tree.elapsed().unwrap();
             let start_pruned_tree_mult = SystemTime::now();
             for _ in 0..NUM_ITERATIONS {
-                root.multiply(&vector);
+                root.mult(&vector);
             }
             let duration_pruned_tree_mult = start_pruned_tree_mult.elapsed().unwrap();
             prune_tree_times.push(duration_prune_tree.as_secs_f64());

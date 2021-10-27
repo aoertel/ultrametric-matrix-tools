@@ -1,5 +1,21 @@
+//! Usful funtions in connection with ultrametric matrices.
+
 use nalgebra::DMatrix;
 
+/// Checks if a matrix is ultrametric.
+///
+/// To check the ultrametric property for a matrix, a similar algorithm as ```from_matrix``` for ```UltrametricTree``` is used. First, the symmetry is checked. If the matrix is symmetric, then it is recursively checked if a permutation of the matrix can be partitioned such that the off-diagonal blocks have one value and the diagonal blocks are ultrametric.
+///
+/// # Example:
+/// ```
+/// let ultrametric = nalgebra::DMatrix::from_vec(4, 4,
+///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+/// let not_ultrametric = nalgebra::DMatrix::from_vec(4, 4,
+///     vec![0.0, 1.0, 3.0, 2.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 2.0, 1.0, 1.0, 1.0]);
+///
+/// assert_eq!(is_ultrametric(ultrametric), true);
+/// assert_eq!(is_ultrametric(not_ultrametric), false);
+/// ```
 pub fn is_ultrametric(matrix: &DMatrix<f64>) -> bool {
     if !is_symmetric(matrix) {
         return false;

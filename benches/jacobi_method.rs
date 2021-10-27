@@ -81,12 +81,12 @@ fn benchmark_jacobi(_c: &mut Criterion) {
                 if conv <= TOLERANCE {
                     break;
                 }
-                let sigma = off_diag_tree.multiply(&x);
+                let sigma = off_diag_tree.mult(&x);
                 let diff = &b - sigma;
                 for i in 0..size {
                     x[i] = diff[i] / diag[i];
                 }
-                conv = (full_tree.multiply(&x) - &b).norm() / b_norm;
+                conv = (full_tree.mult(&x) - &b).norm() / b_norm;
             }
             let duration_fast = start_fast.elapsed().unwrap();
             tree_gen_times.push(duration_tree_gen.as_secs_f64());
@@ -106,12 +106,12 @@ fn benchmark_jacobi(_c: &mut Criterion) {
                 if conv <= TOLERANCE {
                     break;
                 }
-                let sigma = off_diag_tree.multiply(&x);
+                let sigma = off_diag_tree.mult(&x);
                 let diff = &b - sigma;
                 for i in 0..size {
                     x[i] = diff[i] / diag[i];
                 }
-                conv = (full_tree.multiply(&x) - &b).norm() / b_norm;
+                conv = (full_tree.mult(&x) - &b).norm() / b_norm;
             }
             let duration_pruned_fast = start_pruned_fast.elapsed().unwrap();
             prune_tree_times.push(duration_prune_tree.as_secs_f64());

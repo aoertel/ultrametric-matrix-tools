@@ -5,8 +5,7 @@ use pyo3::prelude::*;
 pub mod ultrametric_tree;
 pub mod utils;
 
-pub use self::ultrametric_tree::*;
-pub use self::utils::*;
+pub use self::ultrametric_tree::UltrametricTree;
 
 #[pymodule]
 fn ultrametric_tree(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -22,7 +21,7 @@ fn ultrametric_tree(_py: Python, m: &PyModule) -> PyResult<()> {
                 matrix[(i, j)] = py_array[[i, j]];
             }
         }
-        return is_ultrametric(&matrix);
+        return self::utils::is_ultrametric(&matrix);
     }
 
     Ok(())
