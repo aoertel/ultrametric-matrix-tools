@@ -129,6 +129,13 @@ fn is_block_equal(
 ///
 /// The construction is based on Theorem 1.1 in [(Fiedler, 2002)](fn.random_ultrametric_matrix.html#fn1)[^Fiedler, 2002]. The off-diagonal elements are constructed using the rules in Theorem 1.1. The diagonal elements are randomly chosen from `1` to `size - 1`.
 ///
+/// # Example:
+/// ```
+/// let ultrametric_matrix = random_ultrametric_matrix(10);
+///
+/// assert_eq!(is_ultrametric(ultrametric_matrix), true);
+/// ```
+///
 /// [^Fiedler, 2002]: [Fiedler, M., 2002. Remarks on Monge matrices. Mathematica Bohemica, 127(1), pp.27-32.](https://dml.cz/bitstream/handle/10338.dmlcz/133983/MathBohem_127-2002-1_3.pdf)
 pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     let mut matrix = DMatrix::<f64>::zeros(size, size);
