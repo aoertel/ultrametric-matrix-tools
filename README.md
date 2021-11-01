@@ -73,6 +73,13 @@ cargo build --release
 ```
 The compiled Python module is located at ```./target/release/``` and can be copied from there.
 
+To export the Python wheel run following command
+
+Linux:
+```console
+docker run --rm -v $(pwd):/io konstin2/maturin build --release
+```
+
 ## Examples
 ### Rust Example
 You can try out the Rust examples, you need to [install Cargo](https://www.rust-lang.org/tools/install). You can try out the Python examples located in ```./examples/``` by running the following command:

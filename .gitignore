@@ -1,3 +1,4 @@
 /target
 *.g6
 *.so
+/.env

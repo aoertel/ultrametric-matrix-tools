@@ -2,7 +2,10 @@
 name = "ultrametric_tree"
 version = "0.1.0"
 authors = ["Andy Oertel <andy.oertel@informatik.tu-chemnitz.de>"]
-edition = "2018"
+edition = "2021"
+license = "Apache-2.0"
+readme = "README.md"
+description = "This package provides a fast multiplication algorithm for matrix-vector-multiplications."
 
 [lib]
 name = "ultrametric_tree"
@@ -14,7 +17,10 @@ nalgebra = "0.29.0"
 ptree = "0.3.2"
 numpy = "0.14.1"
 ndarray = "0.15.3"
-pyo3 = "0.14.5"
+
+[dependencies.pyo3]
+version = "0.14.5"
+features = ["extension-module", "abi3-py36"]
 
 [dev-dependencies]
 rand = "0.8.4"

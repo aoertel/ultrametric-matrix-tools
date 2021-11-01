@@ -20,3 +20,9 @@ bench_multiple:
 
 python_example: copy_python
 	python3 examples/$(name).py
+
+python_package:
+	export PYO3_CROSS_LIB_DIR="/usr/x86_64-w64-mingw32/"
+	maturin build --target x86_64-pc-windows-gnu --release
+	export PYO3_CROSS_LIB_DIR="/usr/i686-w64-mingw32/"
+	maturin build --target i686-pc-windows-gnu --release
