@@ -19,7 +19,6 @@ Add the following to the ```Cargo.toml``` file:
 [dependencies]
 # TODO: replace the * by the latest version.
 ultrametric_matrix_tools = "*"
-nalgebra = "*"  # optional, only required 
 ```
 An example of the construction of the ultrametric tree and multiplication with it is:
 ```rust
