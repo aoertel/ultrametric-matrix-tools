@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, DVector};
+use ultrametric_matrix_tools::na::{DMatrix, DVector};
 use ultrametric_matrix_tools::UltrametricTree;
 
 fn main() {

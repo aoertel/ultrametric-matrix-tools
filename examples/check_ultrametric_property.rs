@@ -1,4 +1,4 @@
-use nalgebra::DMatrix;
+use ultrametric_matrix_tools::na::DMatrix;
 use ultrametric_matrix_tools::utils::*;
 
 fn main() {

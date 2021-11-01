@@ -1,10 +1,10 @@
 mod utils;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use nalgebra::DVector;
 use rand::prelude::*;
 use std::io;
 use std::time::SystemTime;
+use ultrametric_matrix_tools::na::DVector;
 use ultrametric_matrix_tools::UltrametricTree;
 
 criterion_group!(benches, benchmark_jacobi);

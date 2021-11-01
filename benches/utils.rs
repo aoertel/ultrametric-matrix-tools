@@ -72,3 +72,15 @@ fn random_permutation(size: usize) -> DMatrix<f64> {
     }
     return matrix;
 }
+
+#[allow(unused)]
+pub fn calculate_normal_product(matrix: &DMatrix<f64>, vector: &DVector<f64>) -> DVector<f64> {
+    let size = vector.nrows();
+    let mut product: DVector<f64> = DVector::<f64>::zeros(size);
+    for i in 0..size {
+        for j in 0..size {
+            product[i] += matrix[(i, j)] * vector[j];
+        }
+    }
+    return product;
+}

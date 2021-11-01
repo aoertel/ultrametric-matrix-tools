@@ -1,7 +1,6 @@
 mod utils;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use nalgebra::{DMatrix, DVector};
 use std::io;
 use std::time::SystemTime;
 use ultrametric_matrix_tools::UltrametricTree;
@@ -74,7 +73,7 @@ fn benchmark_single(_c: &mut Criterion) {
                     + duration_pruned_tree_mult.as_secs_f64(),
             );
             let start_normal = SystemTime::now();
-            calculate_normal_product(&matrix, &vector);
+            utils::calculate_normal_product(&matrix, &vector);
             let duration_normal = start_normal.elapsed().unwrap();
             normal_mult_times.push(duration_normal.as_secs_f64());
         }
@@ -148,15 +147,4 @@ fn benchmark_single(_c: &mut Criterion) {
         pos += 1;
     }
     wtr.flush().unwrap();
-}
-
-fn calculate_normal_product(matrix: &DMatrix<f64>, vector: &DVector<f64>) -> DVector<f64> {
-    let size = vector.nrows();
-    let mut product: DVector<f64> = DVector::<f64>::zeros(size);
-    for i in 0..size {
-        for j in 0..size {
-            product[i] += matrix[(i, j)] * vector[j];
-        }
-    }
-    return product;
 }

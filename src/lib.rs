@@ -6,6 +6,7 @@ pub mod utils;
 
 pub use self::ultrametric_tree::UltrametricTree;
 use crate::utils::PyInit_utils;
+pub extern crate nalgebra as na;
 
 #[pymodule]
 fn ultrametric_matrix_tools(_py: Python, m: &PyModule) -> PyResult<()> {
