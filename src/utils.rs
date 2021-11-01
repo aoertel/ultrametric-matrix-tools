@@ -125,10 +125,14 @@ fn is_block_equal(
 
 /// Constructs a random ultrametric matrix
 ///
+/// The elements of the ultrametric matrix have an integer value between `1` and `size - 1`.
 ///
+/// The construction is based on Theorem 1.1 in [(Fiedler, 2002)](fn.random_ultrametric_matrix.html#fn1)[^Fiedler, 2002]. The off-diagonal elements are constructed using the rules in Theorem 1.1. The diagonal elements are randomly chosen from `1` to `size - 1`.
+///
+/// [^Fiedler, 2002]: [Fiedler, M., 2002. Remarks on Monge matrices. Mathematica Bohemica, 127(1), pp.27-32.](https://dml.cz/bitstream/handle/10338.dmlcz/133983/MathBohem_127-2002-1_3.pdf)
 pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     let mut matrix = DMatrix::<f64>::zeros(size, size);
-    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    let mut rng = thread_rng();
     for i in 1..size {
         let elem = rng.gen_range(1..size) as f64;
         matrix[(i - 1, i)] = elem;
@@ -151,7 +155,7 @@ pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
 }
 
 fn random_vector(size: usize) -> Vec<f64> {
-    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    let mut rng = thread_rng();
     let mut vector: Vec<f64> = Vec::new();
     for _ in 0..size {
         vector.push(rng.gen_range(1..size) as f64);
@@ -160,7 +164,7 @@ fn random_vector(size: usize) -> Vec<f64> {
 }
 
 fn random_permutation(size: usize) -> DMatrix<f64> {
-    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    let mut rng = thread_rng();
     let mut element_vector: Vec<usize> = (0..size).collect();
     element_vector.shuffle(&mut rng);
     let mut matrix = DMatrix::<f64>::zeros(size, size);

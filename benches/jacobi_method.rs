@@ -5,7 +5,6 @@ use nalgebra::DVector;
 use rand::prelude::*;
 use std::io;
 use std::time::SystemTime;
-use ultrametric_matrix_tools::utils::random_ultrametric_matrix;
 use ultrametric_matrix_tools::UltrametricTree;
 
 criterion_group!(benches, benchmark_jacobi);
@@ -50,7 +49,7 @@ fn benchmark_jacobi(_c: &mut Criterion) {
         let mut complete_pruned_tree_times: Vec<f64> = Vec::new();
         let mut normal_algo_times: Vec<f64> = Vec::new();
         for _ in 0..NUM_SAMPLES {
-            let mut matrix = random_ultrametric_matrix(size);
+            let mut matrix = utils::random_ultrametric_matrix(size);
             let mut off_diag = matrix.clone();
             let mut diag = DVector::zeros(size);
             for i in 0..size {

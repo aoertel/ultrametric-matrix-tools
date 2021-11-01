@@ -18,12 +18,12 @@ Add the following to the ```Cargo.toml``` file:
 ```toml
 [dependencies]
 # TODO: replace the * by the latest version.
-ultrametric_tree = "*"
+ultrametric_matrix_tools = "*"
 ```
 An example of the construction of the ultrametric tree and multiplication with it is:
 ```rust
 use nalgebra::{DMatrix, DVector};
-use ultrametric_tree::UltrametricTree;
+use ultrametric_matrix_tools::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(
@@ -40,14 +40,16 @@ fn main() {
 
 ```
 
+[More examples](#rust-example) can bef found in `./examples/`.
+
 ### Quickstart Python
 You can install the current release by running:
 ```console
-pip install ultrametric_tree
+pip install ultrametric_matrix_tools
 ```
 An example of the construction of the ultrametric tree and multiplication with it is:
 ```python
-from ultrametric_tree import UltrametricTree
+from ultrametric_matrix_tools import UltrametricTree
 import numpy as np
 
 matrix = np.array([[0.0, 1.0, 3.0, 1.0], [1.0, 3.0, 1.0, 1.0], [
@@ -58,20 +60,22 @@ tree = UltrametricTree(matrix)
 product = tree.mult(vector)
 ```
 
+[More examples](#python-example) can bef found in `./examples/`.
+
 ## Build
 ### Build Rust Library
 The Rust library is build by running:
 ```console
 cargo build --release
 ```
-The compiled Rust library is located at ```./target/release/``` and can be copied from there.
+The compiled Rust library is located at `./target/release/` and can be copied from there.
 
 ### Build Python Module
 The Python module is build from the Rust code using the [PyO3](https://github.com/PyO3/pyo3). To build the Python module, you need to [install Cargo](https://www.rust-lang.org/tools/install) and run:
 ```console
 cargo build --release
 ```
-The compiled Python module is located at ```./target/release/``` and can be copied from there.
+The compiled Python module is located at `./target/release/` and can be copied from there.
 
 To export the Python wheel run following command
 
@@ -82,7 +86,7 @@ docker run --rm -v $(pwd):/io konstin2/maturin build --release
 
 ## Examples
 ### Rust Example
-You can try out the Rust examples, you need to [install Cargo](https://www.rust-lang.org/tools/install). You can try out the Python examples located in ```./examples/``` by running the following command:
+You can try out the Rust examples, you need to [install Cargo](https://www.rust-lang.org/tools/install). You can try out the Python examples located in `./examples/` by running the following command:
 ```console
 cargo run --release --example [example_name]
 ```
@@ -92,7 +96,7 @@ cargo run --release --example multiplication
 ```
 
 ### Python Example
-To run the Python examples You can try out the Python examples located in ```./examples/``` by running the following command:
+To run the Python examples You can try out the Python examples located in `./examples/` by running the following command:
 ```console
 make python_example name=[example_name]
 ```
