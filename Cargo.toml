@@ -1,5 +1,5 @@
 [package]
-name = "ultrametric_tree"
+name = "ultrametric_matrix_tools"
 version = "0.1.0"
 authors = ["Andy Oertel <andy.oertel@informatik.tu-chemnitz.de>"]
 edition = "2021"
@@ -8,7 +8,7 @@ readme = "README.md"
 description = "This package provides a fast multiplication algorithm for matrix-vector-multiplications."
 
 [lib]
-name = "ultrametric_tree"
+name = "ultrametric_matrix_tools"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
@@ -17,13 +17,13 @@ nalgebra = "0.29.0"
 ptree = "0.3.2"
 numpy = "0.14.1"
 ndarray = "0.15.3"
+rand = "0.8.4"
 
 [dependencies.pyo3]
 version = "0.14.5"
 features = ["extension-module", "abi3-py36"]
 
 [dev-dependencies]
-rand = "0.8.4"
 criterion = "0.3.5"
 csv = "1.1.6"
 

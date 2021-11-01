@@ -4,7 +4,7 @@ build:
 	cargo build --release
 
 copy_python: build
-	cp target/release/libultrametric_tree.so examples/ultrametric_tree.so
+	cp target/release/libultrametric_matrix_tools.so examples/ultrametric_matrix_tools.so
 
 bench:
 	cargo criterion

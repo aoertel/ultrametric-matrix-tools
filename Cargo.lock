@@ -1100,7 +1100,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b63708a265f51345575b27fe43f9500ad611579e764c79edbc2037b1121959ec"
 
 [[package]]
-name = "ultrametric_tree"
+name = "ultrametric_matrix_tools"
 version = "0.1.0"
 dependencies = [
  "criterion",

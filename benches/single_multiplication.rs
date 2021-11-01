@@ -4,7 +4,8 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use nalgebra::{DMatrix, DVector};
 use std::io;
 use std::time::SystemTime;
-use ultrametric_tree::UltrametricTree;
+use ultrametric_matrix_tools::utils::random_ultrametric_matrix;
+use ultrametric_matrix_tools::UltrametricTree;
 
 criterion_group!(benches, benchmark_single);
 criterion_main!(benches);
@@ -46,7 +47,7 @@ fn benchmark_single(_c: &mut Criterion) {
         let mut complete_pruned_tree_mult_times: Vec<f64> = Vec::new();
         let mut normal_mult_times: Vec<f64> = Vec::new();
         for _ in 0..NUM_SAMPLES {
-            let matrix = utils::random_ultrametric_matrix(size);
+            let matrix = random_ultrametric_matrix(size);
             let vector = utils::random_vector(size);
 
             let start_tree_gen = SystemTime::now();

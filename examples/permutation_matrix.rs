@@ -1,5 +1,5 @@
 use nalgebra::DMatrix;
-use ultrametric_tree::UltrametricTree;
+use ultrametric_matrix_tools::UltrametricTree;
 
 fn main() {
     let matrix = DMatrix::from_vec(

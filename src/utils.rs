@@ -1,6 +1,40 @@
 //! Usful funtions in connection with ultrametric matrices.
 
 use nalgebra::DMatrix;
+use ndarray::prelude::*;
+use numpy::{IntoPyArray, PyArray2, PyReadonlyArrayDyn};
+use pyo3::prelude::*;
+use rand::prelude::*;
+
+#[pymodule]
+fn utils(_py: Python, m: &PyModule) -> PyResult<()> {
+    #[pyfn(m)]
+    #[pyo3(name = "is_ultrametric")]
+    pub fn is_ultrametric_py(py_matrix: PyReadonlyArrayDyn<f64>) -> bool {
+        let size = py_matrix.shape()[0];
+        let py_array = py_matrix.as_array();
+        let mut matrix = DMatrix::<f64>::zeros(size, size);
+        for i in 0..size {
+            for j in 0..size {
+                matrix[(i, j)] = py_array[[i, j]];
+            }
+        }
+        return self::is_ultrametric(&matrix);
+    }
+    #[pyfn(m)]
+    #[pyo3(name = "random_ultrametric_matrix")]
+    pub fn random_ultrametric_matrix_py<'py>(py: Python<'py>, size: usize) -> &'py PyArray2<f64> {
+        let matrix = random_ultrametric_matrix(size);
+        let mut py_matrix = Array2::zeros((size, size));
+        for i in 0..size {
+            for j in 0..size {
+                py_matrix[[i, j]] = matrix[(i, j)];
+            }
+        }
+        return py_matrix.into_pyarray(py);
+    }
+    Ok(())
+}
 
 /// Checks if a matrix is ultrametric.
 ///
@@ -87,4 +121,51 @@ fn is_block_equal(
         }
     }
     return true;
+}
+
+/// Constructs a random ultrametric matrix
+///
+///
+pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    for i in 1..size {
+        let elem = rng.gen_range(1..size) as f64;
+        matrix[(i - 1, i)] = elem;
+        matrix[(i, i - 1)] = elem;
+    }
+    for i in (0..(size - 2)).rev() {
+        for k in (i + 2)..size {
+            let elem = f64::min(matrix[(i, k - 1)], matrix[(i + 1, k)]);
+            matrix[(i, k)] = elem;
+            matrix[(k, i)] = elem;
+        }
+    }
+    let diag = random_vector(size);
+    for i in 0..size {
+        matrix[(i, i)] = diag[i];
+    }
+    let permutation = random_permutation(size);
+    matrix = &permutation * matrix * &permutation.transpose();
+    return matrix;
+}
+
+fn random_vector(size: usize) -> Vec<f64> {
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    let mut vector: Vec<f64> = Vec::new();
+    for _ in 0..size {
+        vector.push(rng.gen_range(1..size) as f64);
+    }
+    return vector;
+}
+
+fn random_permutation(size: usize) -> DMatrix<f64> {
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    let mut element_vector: Vec<usize> = (0..size).collect();
+    element_vector.shuffle(&mut rng);
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    for (i, &j) in element_vector.iter().enumerate() {
+        matrix[(i, j)] = 1.0;
+    }
+    return matrix;
 }
