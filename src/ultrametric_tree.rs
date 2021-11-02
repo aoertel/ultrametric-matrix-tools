@@ -186,6 +186,17 @@ impl UltrametricTree {
     }
 
     /// Construct the ultrametric matrix that is represented by the `UltrametricTree`.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
+    /// let reconstructed_matrix = tree.to_matrix();
+    ///
+    /// assert_eq!(matrix, reconstructed_matrix);
+    /// ```
     pub fn to_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
         let mut matrix = DMatrix::<f64>::zeros(size, size);
@@ -236,7 +247,8 @@ impl UltrametricTree {
     /// let mut tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
     /// let product = tree.mult(&vector);
     ///
-    /// assert_eq!(product, nalgebra::DVector::from_vec(vec![28.0, 22.0, 54.0, 18.0]));
+    /// assert_eq!(ultrametric_matrix_tools::na::DVector::from_vec(vec![28.0, 22.0, 54.0, 18.0]),
+    ///     product);
     /// ```
     pub fn mult(&mut self, vector: &DVector<f64>) -> DVector<f64> {
         self.calculate_partial_product(vector, 0.0);
@@ -272,6 +284,19 @@ impl UltrametricTree {
     /// Construct the permutation matrix of the `UltrametricTree`.
     ///
     /// The permutation matrix is implicitly used to partition the matrix for the construction of the `UltrametrixTree` via [`from_matrix`](UltrametricTree::from_matrix).
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let mut tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
+    /// let permutation_matrix = tree.get_permutation_matrix();
+    ///
+    /// assert_eq!(ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
+    ///     vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]),
+    ///     permutation_matrix);
+    /// ```
     pub fn get_permutation_matrix(&self) -> DMatrix<f64> {
         let size = self.partition.len();
         let permutations = self.get_permutation_matrix_recursive();
@@ -376,6 +401,24 @@ impl UltrametricTree {
     /// Prune the `UltrametricTree` to reduce the number of vertices in the tree.
     ///
     /// The pruned tree represents the same structure of the same ultrametric matrix as the tree before. Thus, the pruned tree and the original tree are semantically equivalent, but the pruned tree contains less vertices to increase performance.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let mut tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
+    /// tree.prune_tree();
+    /// tree.print_tree();
+    /// ```
+    /// This results in the folowing tree:
+    /// ```console
+    /// [0, 1, 2, 3], [3], 1
+    /// ├─ [0, 2], [], 3
+    /// │  ├─ [0], [0], 0
+    /// │  └─ [2], [2], 5
+    /// └─ [1], [1], 3
+    /// ```
     pub fn prune_tree(&mut self) {
         let mut new_children: Vec<Box<UltrametricTree>> = Vec::new();
         let mut remove_ids: Vec<usize> = Vec::new();
