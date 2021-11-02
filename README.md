@@ -77,12 +77,19 @@ cargo build --release
 ```
 The compiled Python module is located at `./target/release/` and can be copied from there.
 
-To export the Python wheel run following command
+To export the Python wheels from a Linux system run the following commands:
 
-Linux:
+Linux (requires docker):
 ```console
 docker run --rm -v $(pwd):/io konstin2/maturin build --release
 ```
+
+Windows (requires mingw32-python and mingw64-python):
+```console
+make python_package_windows
+```
+
+Currently, cross-compiling to macOS is not supported.
 
 ## Examples
 ### Rust Example

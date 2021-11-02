@@ -82,9 +82,9 @@ impl UltrametricTree {
     /// # Example:
     ///
     /// ```
-    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
     ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
-    /// let tree = UltrametricTree::from_matrix(&matrix);
+    /// let tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
     /// ```
     pub fn from_matrix(matrix: &DMatrix<f64>) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
@@ -135,9 +135,9 @@ impl UltrametricTree {
     /// # Example:
     ///
     /// ```
-    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
     ///     vec![0.0, 1.1, 3.0, 1.0, 1.1, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
-    /// let tree = UltrametricTree::from_matrix_approx(&matrix, 0.1);
+    /// let tree = ultrametric_matrix_tools::UltrametricTree::from_matrix_approx(&matrix, 0.1);
     /// ```
     pub fn from_matrix_approx(matrix: &DMatrix<f64>, eps: f64) -> Self {
         let vertex_ids: Vec<usize> = (0..matrix.nrows()).collect();
@@ -230,11 +230,11 @@ impl UltrametricTree {
     /// # Example:
     ///
     /// ```
-    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
     ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
-    /// let vector = nalgebra::DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
-    /// let tree = UltrametricTree::from_matrix(&matrix);
-    /// let product = tree.multiply(&vector);
+    /// let vector = ultrametric_matrix_tools::na::DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
+    /// let mut tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
+    /// let product = tree.mult(&vector);
     ///
     /// assert_eq!(product, nalgebra::DVector::from_vec(vec![28.0, 22.0, 54.0, 18.0]));
     /// ```
@@ -402,9 +402,9 @@ impl UltrametricTree {
     /// # Example:
     ///
     /// ```
-    /// let matrix = nalgebra::DMatrix::from_vec(4, 4,
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
     ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
-    /// let tree = UltrametricTree::from_matrix_approx(&matrix);
+    /// let tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
     /// tree.print_tree();
     /// ```
     /// This prints the folowing tree:

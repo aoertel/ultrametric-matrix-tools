@@ -1,4 +1,4 @@
-//! Usful funtions in connection with ultrametric matrices.
+//! Usful funtions to construct and check propertyies of ultrametric matrices.
 
 use nalgebra::DMatrix;
 use ndarray::prelude::*;
@@ -42,13 +42,13 @@ fn utils(_py: Python, m: &PyModule) -> PyResult<()> {
 ///
 /// # Example:
 /// ```
-/// let ultrametric = nalgebra::DMatrix::from_vec(4, 4,
+/// let ultrametric = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
 ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
-/// let not_ultrametric = nalgebra::DMatrix::from_vec(4, 4,
+/// let not_ultrametric = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
 ///     vec![0.0, 1.0, 3.0, 2.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 2.0, 1.0, 1.0, 1.0]);
 ///
-/// assert_eq!(is_ultrametric(ultrametric), true);
-/// assert_eq!(is_ultrametric(not_ultrametric), false);
+/// assert_eq!(ultrametric_matrix_tools::utils::is_ultrametric(&ultrametric), true);
+/// assert_eq!(ultrametric_matrix_tools::utils::is_ultrametric(&not_ultrametric), false);
 /// ```
 pub fn is_ultrametric(matrix: &DMatrix<f64>) -> bool {
     if !is_symmetric(matrix) {
@@ -131,9 +131,9 @@ fn is_block_equal(
 ///
 /// # Example:
 /// ```
-/// let ultrametric_matrix = random_ultrametric_matrix(10);
+/// let ultrametric_matrix = ultrametric_matrix_tools::utils::random_ultrametric_matrix(10);
 ///
-/// assert_eq!(is_ultrametric(ultrametric_matrix), true);
+/// assert_eq!(ultrametric_matrix_tools::utils::is_ultrametric(&ultrametric_matrix), true);
 /// ```
 ///
 /// [^Fiedler, 2002]: [Fiedler, M., 2002. Remarks on Monge matrices. Mathematica Bohemica, 127(1), pp.27-32.](https://dml.cz/bitstream/handle/10338.dmlcz/133983/MathBohem_127-2002-1_3.pdf)
