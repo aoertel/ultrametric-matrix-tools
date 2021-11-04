@@ -11,6 +11,7 @@
   - [Rust Example](#rust-example)
   - [Python Example](#python-example)
 - [License](#license)
+- [Run benchmarks](#run-benchmarks)
 
 ## Quickstart
 ### Quickstart Rust
@@ -40,7 +41,7 @@ fn main() {
 
 ```
 
-[More examples](#rust-example) can bef found in `./examples/`.
+[More examples](#rust-example) can be found in `./examples/`.
 
 ### Quickstart Python
 You can install the current release by running:
@@ -60,7 +61,7 @@ tree = UltrametricTree(matrix)
 product = tree.mult(vector)
 ```
 
-[More examples](#python-example) can bef found in `./examples/`.
+[More examples](#python-example) can be found in `./examples/`.
 
 ## Build
 ### Build Rust Library
@@ -114,3 +115,14 @@ make python_example name=multiplication
 
 ## License
 [Apache-2.0 license](LICENSE)
+
+## Run benchmarks
+The benchmarks use the `criterion` for `cargo`, which can be installed by running:
+```console
+cargo install cargo-criterion
+```
+
+The benchmarks are run by the following command:
+```console
+cargo criterion --bench [benchmark_name]
+```
