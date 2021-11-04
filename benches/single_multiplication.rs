@@ -8,8 +8,16 @@ use ultrametric_matrix_tools::UltrametricTree;
 criterion_group!(benches, benchmark_single);
 criterion_main!(benches);
 
-const MATRIX_SIZES: [usize; 8] = [10, 100, 250, 500, 1_000, 2_500, 5_000, 10_000];
-const NUM_SAMPLES: u32 = 1000;
+const MATRIX_SIZES: [usize; 7] = [
+    2usize.pow(3),
+    2usize.pow(5),
+    2usize.pow(7),
+    2usize.pow(9),
+    2usize.pow(11),
+    2usize.pow(13),
+    2usize.pow(15),
+];
+const NUM_SAMPLES: u32 = 100;
 const HEADER_SINGLE: [&str; 16] = [
     "pos",
     "size",

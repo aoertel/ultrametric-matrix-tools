@@ -9,7 +9,7 @@ criterion_group!(benches, benchmark_multiple);
 criterion_main!(benches);
 
 const MATRIX_SIZES: [usize; 8] = [10, 100, 250, 500, 1_000, 2_500, 5_000, 10_000];
-const NUM_SAMPLES: u32 = 1000;
+const NUM_SAMPLES: u32 = 100;
 const HEADER_MULTIPLE: [&str; 17] = [
     "pos",
     "size",

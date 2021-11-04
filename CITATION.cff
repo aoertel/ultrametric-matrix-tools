@@ -1,0 +1,14 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Ultrametric matrix toolbox
+message: Please cite this software using these metadata.
+type: software
+authors:
+  - given-names: Andy
+    family-names: Oertel
+    email: andy.oertel@informatik.tu-chemnitz.de
+  - given-names: Tobias
+    family-names: Hofmann
+    email: tobias.hofmann@math.tu-chemnitz.de

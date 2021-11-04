@@ -10,8 +10,16 @@ use ultrametric_matrix_tools::UltrametricTree;
 criterion_group!(benches, benchmark_jacobi);
 criterion_main!(benches);
 
-const MATRIX_SIZES: [usize; 8] = [10, 100, 250, 500, 1_000, 2_500, 5_000, 10_000];
-const NUM_SAMPLES: u32 = 1000;
+const MATRIX_SIZES: [usize; 7] = [
+    2usize.pow(3),
+    2usize.pow(5),
+    2usize.pow(7),
+    2usize.pow(9),
+    2usize.pow(11),
+    2usize.pow(13),
+    2usize.pow(15),
+];
+const NUM_SAMPLES: u32 = 100;
 const MAX_ITERATIONS: u32 = 1000000;
 const TOLERANCE: f64 = 10e-10;
 const HEADER_SINGLE: [&str; 16] = [
@@ -53,13 +61,13 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             let mut off_diag = matrix.clone();
             let mut diag = DVector::zeros(size);
             for i in 0..size {
-                let mut diag_elem = 1.0;
+                let mut diag_elem = 0.0;
                 for j in 0..size {
                     if i != j {
                         diag_elem += matrix[(i, j)];
                     }
                 }
-                diag_elem = rng.gen_range(diag_elem..(diag_elem * diag_elem));
+                diag_elem = rng.gen_range((1.0 + diag_elem)..(diag_elem * diag_elem));
                 diag[i] = diag_elem;
                 matrix[(i, i)] = diag_elem;
                 off_diag[(i, i)] = 0.;
