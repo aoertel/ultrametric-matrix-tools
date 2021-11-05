@@ -138,12 +138,12 @@ fn benchmark_jacobi(_c: &mut Criterion) {
                 if conv <= TOLERANCE {
                     break;
                 }
-                let sigma = &off_diag * &x;
+                let sigma = utils::calculate_normal_product(&off_diag, &x);
                 let diff = &b - sigma;
                 for i in 0..size {
                     x[i] = diff[i] / diag[i];
                 }
-                conv = (&matrix * &x - &b).norm() / b_norm;
+                conv = (utils::calculate_normal_product(&matrix, &x) - &b).norm() / b_norm;
             }
             let duration_normal = start_normal.elapsed().unwrap();
             normal_algo_times.push(duration_normal.as_secs_f64());
