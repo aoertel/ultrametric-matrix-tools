@@ -2,8 +2,10 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: Ultrametric matrix toolbox
-message: Please cite this software using these metadata.
+title: Ultrametric matrix tools
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
 type: software
 authors:
   - given-names: Andy
@@ -12,3 +14,12 @@ authors:
   - given-names: Tobias
     family-names: Hofmann
     email: tobias.hofmann@math.tu-chemnitz.de
+repository-code: >-
+  https://github.com/aoertel/ultrametric-matrix-tools
+keywords:
+  - ultrametric matrix
+  - rust
+  - matrix-vector multiplication
+license: Apache-2.0
+version: 0.1.0
+date-released: '2021-11-05'
