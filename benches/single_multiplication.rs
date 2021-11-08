@@ -17,7 +17,7 @@ const MATRIX_SIZES: [usize; 7] = [
     2usize.pow(13),
     2usize.pow(15),
 ];
-const NUM_SAMPLES: u32 = 100;
+const NUM_SAMPLES: u32 = 10;
 const HEADER_SINGLE: [&str; 16] = [
     "pos",
     "size",
@@ -53,7 +53,7 @@ fn benchmark_single(_c: &mut Criterion) {
         let mut complete_pruned_tree_mult_times: Vec<f64> = Vec::new();
         let mut normal_mult_times: Vec<f64> = Vec::new();
         for _ in 0..NUM_SAMPLES {
-            let matrix = utils::random_ultrametric_matrix(size);
+            let matrix = utils::random_special_ultrametric_matrix(size);
             let vector = utils::random_vector(size);
 
             let start_tree_gen = SystemTime::now();

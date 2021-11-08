@@ -38,6 +38,32 @@ fn ultrametric_matrix_recursion(matrix: &mut DMatrix<f64>, lower: usize, upper: 
 }
 
 #[allow(unused)]
+pub fn random_special_ultrametric_matrix(size: usize) -> DMatrix<f64> {
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
+    for i in 1..size {
+        let elem = rng.gen_range(1..size) as f64;
+        matrix[(i - 1, i)] = elem;
+        matrix[(i, i - 1)] = elem;
+    }
+    for i in (0..(size - 2)).rev() {
+        for k in (i + 2)..size {
+            let elem = f64::min(matrix[(i, k - 1)], matrix[(i + 1, k)]);
+            matrix[(i, k)] = elem;
+            matrix[(k, i)] = elem;
+        }
+    }
+    for i in 1..(size - 1) {
+        matrix[(i, i)] = f64::max(matrix[(i - 1, i)], matrix[(i, i + 1)]);
+    }
+    matrix[(0, 0)] = matrix[(0, 1)];
+    matrix[(size - 1, size - 1)] = matrix[(size - 2, size - 1)];
+    let permutation = random_permutation(size);
+    matrix = &permutation * matrix * &permutation.transpose();
+    return matrix;
+}
+
+#[allow(unused)]
 pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     let mut matrix = DMatrix::<f64>::zeros(size, size);
     let mut rng: StdRng = SeedableRng::seed_from_u64(42);

@@ -19,7 +19,7 @@ const MATRIX_SIZES: [usize; 7] = [
     2usize.pow(13),
     2usize.pow(15),
 ];
-const NUM_SAMPLES: u32 = 100;
+const NUM_SAMPLES: u32 = 10;
 const MAX_ITERATIONS: u32 = 1000000;
 const TOLERANCE: f64 = 10e-10;
 const HEADER_SINGLE: [&str; 16] = [
@@ -57,7 +57,7 @@ fn benchmark_jacobi(_c: &mut Criterion) {
         let mut complete_pruned_tree_times: Vec<f64> = Vec::new();
         let mut normal_algo_times: Vec<f64> = Vec::new();
         for _ in 0..NUM_SAMPLES {
-            let mut matrix = utils::random_ultrametric_matrix(size);
+            let mut matrix = utils::random_special_ultrametric_matrix(size);
             let mut off_diag = matrix.clone();
             let mut diag = DVector::zeros(size);
             for i in 0..size {

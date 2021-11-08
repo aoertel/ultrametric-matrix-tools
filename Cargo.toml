@@ -1,6 +1,6 @@
 [package]
 name = "ultrametric_matrix_tools"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Andy Oertel <andy.oertel@informatik.tu-chemnitz.de>"]
 edition = "2021"
 license = "Apache-2.0"

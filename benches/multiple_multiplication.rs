@@ -9,7 +9,7 @@ criterion_group!(benches, benchmark_multiple);
 criterion_main!(benches);
 
 const MATRIX_SIZES: [usize; 8] = [10, 100, 250, 500, 1_000, 2_500, 5_000, 10_000];
-const NUM_SAMPLES: u32 = 100;
+const NUM_SAMPLES: u32 = 10;
 const HEADER_MULTIPLE: [&str; 17] = [
     "pos",
     "size",
@@ -47,7 +47,7 @@ fn benchmark_multiple(_c: &mut Criterion) {
         let mut pruned_tree_mult_times: Vec<f64> = Vec::new();
         let mut complete_pruned_tree_mult_times: Vec<f64> = Vec::new();
         for i in 0..NUM_SAMPLES {
-            let matrix = utils::random_ultrametric_matrix(size);
+            let matrix = utils::random_special_ultrametric_matrix(size);
             let vector = utils::random_vector(size);
 
             let start_tree_gen = SystemTime::now();
