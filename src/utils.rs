@@ -54,7 +54,7 @@ fn utils(_py: Python, m: &PyModule) -> PyResult<()> {
 
 /// Checks if a matrix is ultrametric.
 ///
-/// To check the ultrametric property for a matrix, a similar algorithm as ```from_matrix``` for ```UltrametricTree``` is used. First, the symmetry is checked. If the matrix is symmetric, then it is recursively checked if a permutation of the matrix can be partitioned such that the off-diagonal blocks have one value and the diagonal blocks are ultrametric.
+/// To check the ultrametric property for a matrix, a similar algorithm as `from_matrix` for `UltrametricTree` is used. First, the symmetry is checked. If the matrix is symmetric, then it is recursively checked if a permutation of the matrix can be partitioned such that the off-diagonal blocks have one value and the diagonal blocks are ultrametric.
 ///
 /// # Example:
 /// ```

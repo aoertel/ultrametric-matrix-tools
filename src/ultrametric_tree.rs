@@ -10,7 +10,7 @@ use std::ops;
 
 /// Tree that represents the structure of an ultrametric matrix.
 ///
-/// Actually, ```UltrametricTree``` only represents one vertex of the tree. However, a vertex and its ```children``` represent the structure of an ultrametric tree. To reconstruct the original ultrametric matrix, the root vertex of the tree has to be stored.
+/// Actually, `UltrametricTree` only represents one vertex of the tree. However, a vertex and its `children` represent the structure of an ultrametric tree. To reconstruct the original ultrametric matrix, the root vertex of the tree has to be stored.
 #[pyclass]
 #[derive(Default, Clone)]
 pub struct UltrametricTree {
@@ -77,7 +77,7 @@ impl UltrametricTree {
 
     /// Construct a `UltrametricTree` from an ultrametric matrix that represents the structure of the matrix.
     ///
-    /// This function does not check if the matrix is ultrametric. The value retured by this function is the root of the tree that represents the ultrametric matrix ```matrix```. Thus, the function returns the tree that represents ```matrix```.
+    /// This function does not check if the matrix is ultrametric. The value retured by this function is the root of the tree that represents the ultrametric matrix `matrix`. Thus, the function returns the tree that represents `matrix`.
     ///
     /// # Example:
     ///
