@@ -5,7 +5,8 @@ authors = ["Andy Oertel <andy.oertel@informatik.tu-chemnitz.de>"]
 edition = "2021"
 license = "Apache-2.0"
 readme = "README.md"
-description = "This package provides a fast multiplication algorithm for matrix-vector-multiplications."
+description = "Toolbox that provides functions and data structures to generate and handle ultrametric matrices."
+keywords = ["math", "linear", "algebra", "ultrametric tree", "ultrametric matrix"]
 
 [lib]
 name = "ultrametric_matrix_tools"
