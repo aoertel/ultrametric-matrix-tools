@@ -21,7 +21,7 @@ The implementation is written in Rust and can be cross-compiled to Python.
   - [Rust Example](#rust-example)
   - [Python Example](#python-example)
 - [License](#license)
-- [Run benchmarks](#run-benchmarks)
+- [Benchmarks](#benchmarks)
 
 ## Quickstart
 ### Quickstart Rust
@@ -132,7 +132,7 @@ python [example_name].py
 ## License
 This project is under the [Apache-2.0 license](LICENSE).
 
-## Run benchmarks
+## Benchmarks
 The benchmarks use `criterion` for `cargo`, which can be installed by running:
 ```console
 cargo install cargo-criterion
