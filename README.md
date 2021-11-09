@@ -1,4 +1,14 @@
+# Ultrametric matrix tools <!-- omit in toc -->
+This toolbox provides functions and data structures to construct and handle ultrametric matrices in Rust and Python. The aim of the project is to provide efficient tools for ultrametric matrices and ultrametric trees. Currently, the project has the following features.
 
+### Features: <!-- omit in toc -->
+- Generate a random ultrametric matrix
+- Test ultramtic matrix property
+- Construct the ultrametric tree from the ultrametric matrix
+- Get properties of ultrametric tree
+- Fast multiplication of ultrametric matrix with vector
+
+The implementation is written in Rust and can be cross-compiled to Python.
 
 ## Table of Contents <!-- omit in toc -->
 - [Quickstart](#quickstart)

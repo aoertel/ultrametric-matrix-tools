@@ -33,6 +33,22 @@ fn utils(_py: Python, m: &PyModule) -> PyResult<()> {
         }
         return py_matrix.into_pyarray(py);
     }
+
+    #[pyfn(m)]
+    #[pyo3(name = "random_special_ultrametric_matrix")]
+    pub fn random_special_ultrametric_matrix_py<'py>(
+        py: Python<'py>,
+        size: usize,
+    ) -> &'py PyArray2<f64> {
+        let matrix = random_special_ultrametric_matrix(size);
+        let mut py_matrix = Array2::zeros((size, size));
+        for i in 0..size {
+            for j in 0..size {
+                py_matrix[[i, j]] = matrix[(i, j)];
+            }
+        }
+        return py_matrix.into_pyarray(py);
+    }
     Ok(())
 }
 
