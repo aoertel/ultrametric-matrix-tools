@@ -21,7 +21,7 @@ Add the following to the ```Cargo.toml``` file:
 # TODO: replace the * by the latest version.
 ultrametric_matrix_tools = "*"
 ```
-An example of the construction of the ultrametric tree and multiplication with it is:
+An example of the usage of is:
 ```rust
 use ultrametric_matrix_tools::na::{DMatrix, DVector};
 use ultrametric_matrix_tools::UltrametricTree;
@@ -35,10 +35,10 @@ fn main() {
         ],
     );
     let vector = DVector::from_vec(vec![4.0, 2.0, 7.0, 5.0]);
+
     let tree = UltrametricTree::from_matrix(&matrix);
     let product = tree * vector;
 }
-
 ```
 
 [More examples](#rust-example) can be found in `./examples/`.
@@ -48,6 +48,7 @@ You can install the current release by running:
 ```console
 pip install ultrametric_matrix_tools
 ```
+
 An example of the construction of the ultrametric tree and multiplication with it is:
 ```python
 from ultrametric_matrix_tools import UltrametricTree
@@ -69,16 +70,16 @@ The Rust library is build by running:
 ```console
 cargo build --release
 ```
-The compiled Rust library is located at `./target/release/` and can be copied from there.
+The compiled Rust library is located in `./target/release/` and can be copied from there.
 
 ### Build Python Module
 The Python module is build from the Rust code using the [PyO3](https://github.com/PyO3/pyo3). To build the Python module, you need to [install Cargo](https://www.rust-lang.org/tools/install) and run:
 ```console
 cargo build --release
 ```
-The compiled Python module is located at `./target/release/` and can be copied from there.
+The compiled Python module is located in `./target/release/` and can be copied from there.
 
-To export the Python wheels from a Linux system run the following commands:
+To export the Python wheels from a Linux host system run the following commands:
 
 Linux (requires docker):
 ```console
@@ -104,7 +105,7 @@ cargo run --release --example multiplication
 ```
 
 ### Python Example
-To run the Python examples You can try out the Python examples located in `./examples/` by running the following command:
+To run the Python examples, you need to [install Cargo](https://www.rust-lang.org/tools/install). You can try out the Python examples located in `./examples/` by running the following command:
 ```console
 make python_example name=[example_name]
 ```
@@ -113,16 +114,21 @@ E.g. to run the multiplication example run:
 make python_example name=multiplication
 ```
 
+Alternatively, if you have the Python package already installed via pip, then you can run the examples directly:
+```console
+python [example_name].py
+```
+
 ## License
-[Apache-2.0 license](LICENSE)
+This project is under the [Apache-2.0 license](LICENSE).
 
 ## Run benchmarks
-The benchmarks use the `criterion` for `cargo`, which can be installed by running:
+The benchmarks use `criterion` for `cargo`, which can be installed by running:
 ```console
 cargo install cargo-criterion
 ```
 
-The benchmarks are run by the following command:
+The benchmarks can be found in `./benches` and are run by:
 ```console
 cargo criterion --bench [benchmark_name]
 ```
