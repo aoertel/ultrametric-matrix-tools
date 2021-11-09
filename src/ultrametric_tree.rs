@@ -379,6 +379,38 @@ impl UltrametricTree {
         return py_product;
     }
 
+    /// Get the element of the matrix represented by the `UltrametricTree` at row index `i` and column index `j`.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// let matrix = ultrametric_matrix_tools::na::DMatrix::from_vec(4, 4,
+    ///     vec![0.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 1.0, 3.0, 1.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    /// let tree = ultrametric_matrix_tools::UltrametricTree::from_matrix(&matrix);
+    ///
+    /// assert_eq!(*tree.get(0, 2), Some(3.0));
+    /// ```
+    pub fn get(&self, i: usize, j: usize) -> Option<f64> {
+        let size = self.partition.len();
+        if i >= size || j >= size {
+            return None;
+        }
+        return Some(self.get_recursive(i, j));
+    }
+
+    /// Recursive function to get the element of the matrix represented by the `UltrametricTree` at row index `i` and column index `j`.
+    fn get_recursive(&self, i: usize, j: usize) -> f64 {
+        if self.partition_leaves.contains(&i) || self.partition_leaves.contains(&j) {
+            return self.level;
+        }
+        for child in self.children.iter() {
+            if child.partition.contains(&i) && child.partition.contains(&j) {
+                return child.get_recursive(i, j);
+            }
+        }
+        return self.level;
+    }
+
     /// Python wrapper for [`get_permutation_matrix`](UltrametricTree::get_permutation_matrix).
     #[pyo3(name = "get_permutation_matrix")]
     pub fn get_permutation_matrix_py<'py>(&self, py: Python<'py>) -> &'py PyArray2<f64> {

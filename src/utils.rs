@@ -156,8 +156,45 @@ pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     for i in 0..size {
         matrix[(i, i)] = diag[i];
     }
-    let permutation = random_permutation(size);
-    matrix = &permutation * matrix * &permutation.transpose();
+    permutate_matrix(&mut matrix);
+    return matrix;
+}
+
+/// Constructs a random special ultrametric matrix
+///
+/// The elements of the ultrametric matrix have an integer value between `1` and `size - 1`.
+///
+/// The construction is based on Theorem 1.1 in [(Fiedler, 2002)](fn.random_ultrametric_matrix.html#fn1)[^Fiedler, 2002]. The elements are constructed using the rules in Theorem 1.1.
+///
+/// # Example:
+/// ```
+/// let ultrametric_matrix = ultrametric_matrix_tools::utils::random_special_ultrametric_matrix(10);
+///
+/// assert_eq!(ultrametric_matrix_tools::utils::is_ultrametric(&ultrametric_matrix), true);
+/// ```
+///
+/// [^Fiedler, 2002]: [Fiedler, M., 2002. Remarks on Monge matrices. Mathematica Bohemica, 127(1), pp.27-32.](https://dml.cz/bitstream/handle/10338.dmlcz/133983/MathBohem_127-2002-1_3.pdf)
+pub fn random_special_ultrametric_matrix(size: usize) -> DMatrix<f64> {
+    let mut matrix = DMatrix::<f64>::zeros(size, size);
+    let mut rng = thread_rng();
+    for i in 1..size {
+        let elem = rng.gen_range(1..size) as f64;
+        matrix[(i - 1, i)] = elem;
+        matrix[(i, i - 1)] = elem;
+    }
+    for i in (0..(size - 2)).rev() {
+        for k in (i + 2)..size {
+            let elem = f64::min(matrix[(i, k - 1)], matrix[(i + 1, k)]);
+            matrix[(i, k)] = elem;
+            matrix[(k, i)] = elem;
+        }
+    }
+    for i in 1..(size - 1) {
+        matrix[(i, i)] = f64::max(matrix[(i - 1, i)], matrix[(i, i + 1)]);
+    }
+    matrix[(0, 0)] = matrix[(0, 1)];
+    matrix[(size - 1, size - 1)] = matrix[(size - 2, size - 1)];
+    permutate_matrix(&mut matrix);
     return matrix;
 }
 
@@ -170,13 +207,16 @@ fn random_vector(size: usize) -> Vec<f64> {
     return vector;
 }
 
-fn random_permutation(size: usize) -> DMatrix<f64> {
-    let mut rng = thread_rng();
+fn permutate_matrix(matrix: &mut DMatrix<f64>) {
+    let size = matrix.shape().0;
+    let mut new_matrix = DMatrix::<f64>::zeros(size, size);
+    let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     let mut element_vector: Vec<usize> = (0..size).collect();
     element_vector.shuffle(&mut rng);
-    let mut matrix = DMatrix::<f64>::zeros(size, size);
-    for (i, &j) in element_vector.iter().enumerate() {
-        matrix[(i, j)] = 1.0;
+    for (old_i, &new_i) in element_vector.iter().enumerate() {
+        for (old_j, &new_j) in element_vector.iter().enumerate() {
+            new_matrix[(new_i, new_j)] = matrix[(old_i, old_j)];
+        }
     }
-    return matrix;
+    *matrix = new_matrix;
 }

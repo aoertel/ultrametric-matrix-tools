@@ -58,8 +58,7 @@ pub fn random_special_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     }
     matrix[(0, 0)] = matrix[(0, 1)];
     matrix[(size - 1, size - 1)] = matrix[(size - 2, size - 1)];
-    let permutation = random_permutation(size);
-    matrix = &permutation * matrix * &permutation.transpose();
+    permutate_matrix(&mut matrix);
     return matrix;
 }
 
@@ -83,20 +82,22 @@ pub fn random_ultrametric_matrix(size: usize) -> DMatrix<f64> {
     for i in 0..size {
         matrix[(i, i)] = diag[i];
     }
-    let permutation = random_permutation(size);
-    matrix = &permutation * matrix * &permutation.transpose();
+    permutate_matrix(&mut matrix);
     return matrix;
 }
 
-fn random_permutation(size: usize) -> DMatrix<f64> {
+fn permutate_matrix(matrix: &mut DMatrix<f64>) {
+    let size = matrix.shape().0;
+    let mut new_matrix = DMatrix::<f64>::zeros(size, size);
     let mut rng: StdRng = SeedableRng::seed_from_u64(42);
     let mut element_vector: Vec<usize> = (0..size).collect();
     element_vector.shuffle(&mut rng);
-    let mut matrix = DMatrix::<f64>::zeros(size, size);
-    for (i, &j) in element_vector.iter().enumerate() {
-        matrix[(i, j)] = 1.0;
+    for (old_i, &new_i) in element_vector.iter().enumerate() {
+        for (old_j, &new_j) in element_vector.iter().enumerate() {
+            new_matrix[(new_i, new_j)] = matrix[(old_i, old_j)];
+        }
     }
-    return matrix;
+    *matrix = new_matrix;
 }
 
 #[allow(unused)]

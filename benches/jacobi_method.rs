@@ -76,13 +76,13 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             let b_norm = b.norm();
             let x_start = utils::random_vector(size);
 
-            let mut x = x_start.clone();
-            let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
-
             let start_tree_gen = SystemTime::now();
             let mut off_diag_tree = UltrametricTree::from_matrix(&off_diag);
             let mut full_tree = UltrametricTree::from_matrix(&matrix);
             let duration_tree_gen = start_tree_gen.elapsed().unwrap();
+
+            let mut x = x_start.clone();
+            let mut conv = (full_tree.mult(&x) - &b).norm() / b_norm;
 
             let start_fast = SystemTime::now();
             for _ in 0..MAX_ITERATIONS {
@@ -102,7 +102,7 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             complete_tree_times.push(duration_tree_gen.as_secs_f64() + duration_fast.as_secs_f64());
 
             let mut x = x_start.clone();
-            let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
+            let mut conv = (full_tree.mult(&x) - &b).norm() / b_norm;
 
             let start_prune_tree = SystemTime::now();
             off_diag_tree.prune_tree();
@@ -131,7 +131,7 @@ fn benchmark_jacobi(_c: &mut Criterion) {
             );
 
             let mut x = x_start.clone();
-            let mut conv = ((&matrix * &x) - &b).norm() / b_norm;
+            let mut conv = (full_tree.mult(&x) - &b).norm() / b_norm;
 
             let start_normal = SystemTime::now();
             for _ in 0..MAX_ITERATIONS {
