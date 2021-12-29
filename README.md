@@ -1,4 +1,6 @@
 # Ultrametric matrix tools <!-- omit in toc -->
+[![DOI](https://zenodo.org/badge/424882843.svg)](https://zenodo.org/badge/latestdoi/424882843)
+
 This toolbox provides functions and data structures to construct and handle ultrametric matrices in Rust and Python. The aim of the project is to provide efficient tools for ultrametric matrices and ultrametric trees. Currently, the project has the following features.
 
 ### Features: <!-- omit in toc -->
