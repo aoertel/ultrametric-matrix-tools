@@ -13,7 +13,7 @@ authors:
     email: tobias.hofmann@math.tu-chemnitz.de
   - given-names: Andy
     family-names: Oertel
-    email: andy.oertel@informatik.tu-chemnitz.de
+    email: andy.oertel@cs.lth.se
 repository-code: >-
   https://github.com/aoertel/ultrametric-matrix-tools
 keywords:
