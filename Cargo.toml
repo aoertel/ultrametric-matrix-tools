@@ -1,10 +1,11 @@
 [package]
 name = "ultrametric_matrix_tools"
 version = "0.1.1"
-authors = ["Andy Oertel <andy.oertel@informatik.tu-chemnitz.de>"]
+authors = ["Andy Oertel <andy.oertel@cs.lth.se>"]
 edition = "2021"
 license = "Apache-2.0"
 readme = "README.md"
+repository = "https://github.com/aoertel/ultrametric-matrix-tools/"
 description = "Toolbox that provides functions and data structures to generate and handle ultrametric matrices."
 keywords = ["math", "linear", "algebra", "ultrametric tree", "ultrametric matrix"]
 
