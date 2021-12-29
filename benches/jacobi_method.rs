@@ -67,7 +67,7 @@ fn benchmark_jacobi(_c: &mut Criterion) {
                         diag_elem += matrix[(i, j)];
                     }
                 }
-                diag_elem = rng.gen_range((1.0 + diag_elem)..(diag_elem * diag_elem));
+                diag_elem = rng.gen_range((1.0 + diag_elem)..((diag_elem * diag_elem) + 1.0));
                 diag[i] = diag_elem;
                 matrix[(i, i)] = diag_elem;
                 off_diag[(i, i)] = 0.;
