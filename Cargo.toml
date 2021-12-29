@@ -7,7 +7,7 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/aoertel/ultrametric-matrix-tools/"
 description = "Toolbox that provides functions and data structures to generate and handle ultrametric matrices."
-keywords = ["math", "linear", "algebra", "ultrametric tree", "ultrametric matrix"]
+keywords = ["math", "linear", "algebra", "ultrametric-tree", "ultrametric-matrix"]
 
 [lib]
 name = "ultrametric_matrix_tools"
