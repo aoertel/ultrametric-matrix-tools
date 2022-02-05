@@ -1,0 +1,18 @@
+[project]
+name = "ultrametric-matrix-tools"
+authors = [
+  {email = "andy.oertel@cs.lth.se"},
+  {name = "Andy Oertel"}
+]
+maintainers = [
+  {name = "Andy Oertel", email = "andy.oertel@cs.lth.se"}
+]
+license = {file = "LICENSE"}
+requires-python = ">=3.6"
+readme = "README.md"
+description = "Toolbox that provides functions and data structures to generate and handle ultrametric matrices."
+keywords = ["math", "linear", "algebra", "ultrametric tree", "ultrametric matrix"]
+
+[build-system]
+requires = ["maturin>=0.12,<0.13"]
+build-backend = "maturin"
